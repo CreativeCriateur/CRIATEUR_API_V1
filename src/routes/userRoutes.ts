@@ -8,10 +8,9 @@ import multer from "multer";
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 const router = Router();
-
 /**
  * @swagger
- * /api/users/create-user:
+ * /v1/users/create-user:
  *   post:
  *     summary: Create a new user
  *     description: Adds a new user to the system
@@ -77,7 +76,7 @@ router.post("/create-user", (req: Request, res: Response): any => {
 
 /**
  * @swagger
- * /api/users/register:
+ * /v1/users/register:
  *   post:
  *     summary: Create a new user
  *     description: Adds a new user to the system
@@ -90,15 +89,30 @@ router.post("/create-user", (req: Request, res: Response): any => {
  *           schema:
  *             type: object
  *             properties:
- *               fullName:
+ *               firstName:
  *                 type: string
  *                 example: john
+ *               lastName:
+ *                 type: string
+ *                 example: Doe
+ *               primaryPhone:
+ *                 type: string
+ *                 example: 2347051235678
  *               email:
  *                 type: string
  *                 example: johnkenny@example.com
  *               password:
  *                 type: string
  *                 example: Mypassword123
+ *               gender:
+ *                 type: string
+ *                 example: male
+ *               country:
+ *                 type: string
+ *                 example: NG
+ *               maritalStatus:
+ *                 type: string
+ *                 example: single
  *     responses:
  *       201:
  *         description: User created successfully
@@ -125,7 +139,7 @@ router.route("/register").post(handleCreateUser);
 
 /**
  * @swagger
- * /api/users/{id}:
+ * /v1/users/{id}:
  *   get:
  *     summary: Get user by ID
  *     tags:

@@ -5,9 +5,10 @@ import {
 import { Router, Request, Response } from "express";
 
 const router = Router();
+console.log("Inside test route running");
 /**
  * @swagger
- * /api/tests/example:
+ * /v1/tests/example:
  *   get:
  *     summary: Example endpoint
  *     tags:
@@ -32,7 +33,7 @@ router.get("/example", (req: Request, res: Response) => {
 
 /**
  * @swagger
- * /api/tests/list:
+ * /v1/tests/list:
  *   get:
  *     summary: List endpoint
  *     tags:
@@ -55,7 +56,7 @@ router.route("/list").get(handleGetAllTest);
 
 /**
  * @swagger
- * /api/tests/create-test:
+ * /v1/tests/create-test:
  *   post:
  *     summary: Create a new User Test
  *     description: Adds a new user to the system as a test

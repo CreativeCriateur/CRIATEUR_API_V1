@@ -8,8 +8,10 @@ export const getTestData = async (
   req: Request,
   res: Response
 ): Promise<any> => {
+  console.log(db.config, "db.models");
   const data = await db.Test.findAll();
-  return await res.status(200).json({
+  console.log(data, " data");
+  return res.status(200).json({
     success: true,
     data: data
   });

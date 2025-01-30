@@ -31,13 +31,13 @@ const swaggerDocs = swaggerJsdoc(swaggerConfig);
 // Serve Swagger UI
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
-app.use("/api", routes);
+app.use("/v1", routes);
 
-const createTest = () => {
-  testSeeds.map((data) => {
-    db.Test.create(data);
-  });
-};
+// const createTest = () => {
+//   testSeeds.map((data) => {
+//     db.Test.create(data);
+//   });
+// };
 
 //createTest();
 
