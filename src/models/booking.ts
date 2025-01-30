@@ -1,6 +1,5 @@
 "use strict";
 import { Model, DataTypes, Sequelize } from "sequelize";
-import { sequelize } from "../models";
 interface bookingAttributes {
   id: number;
   uuid: string;

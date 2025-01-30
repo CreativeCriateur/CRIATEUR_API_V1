@@ -1,7 +1,6 @@
 "use strict";
 
 import { Model, DataTypes, Sequelize } from "sequelize";
-import { sequelize } from "../models"; // Ensure the path is correct
 interface testAttributes {
   id: number;
   firstName: string;
