@@ -10,7 +10,9 @@ import {
   loginUser,
   photoUpload,
   updateUser,
-  verifyOTP
+  verifyOTP,
+  createAccountInfo,
+  updateAccountInfo
 } from "../services/user.service";
 
 export const handleCreateUser = async (
@@ -40,7 +42,7 @@ export const handleDeleteUser = async (req: Request, res: Response) => {
   return deleteUserAccount(req, res);
 };
 
-export const handleLoginUserOtp = async (req: Request, res: Response) => {
+export const handleLoginNoPassword = async (req: Request, res: Response) => {
   return loginNoPassword(req, res);
 };
 
@@ -78,4 +80,12 @@ export const handlePhotoUpload = async (
 ): Promise<any> => {
   console.log("inside the photo upload controller");
   return await photoUpload(req, res);
+};
+
+export const handleCreateAccountInfo = async (req: Request, res: Response) => {
+  return createAccountInfo(req, res);
+};
+
+export const handleUpdateAccountInfo = async (req: Request, res: Response) => {
+  return await updateAccountInfo(req, res);
 };

@@ -61,8 +61,7 @@ export class WaitList
           type: DataTypes.ENUM(...Object.values(BusinessType))
         },
         title: {
-          type: DataTypes.STRING,
-          allowNull: false
+          type: DataTypes.STRING
         },
         isDeleted: {
           type: DataTypes.BOOLEAN,

@@ -10,7 +10,7 @@ import Test from "./test";
 import AccountInfo from "./accountinfo";
 import WaitList from "./waitlist";
 import User from "./user";
-//import User from "./user";
+import Resource from "./resource";
 const env = process.env.NODE_ENV || "development";
 const config = require(__dirname + "/../config/config.js")[env];
 
@@ -39,7 +39,8 @@ const db: any = {
   Service,
   Test,
   User,
-  WaitList
+  WaitList,
+  Resource
 };
 
 AccountInfo.initModel(sequelize);
@@ -51,6 +52,7 @@ Service.initModel(sequelize);
 Test.initModel(sequelize);
 User.initModel(sequelize);
 WaitList.initModel(sequelize);
+Resource.initModel(sequelize);
 
 Object.values(db).forEach((modelName: any) => {
   if (modelName.associate) {

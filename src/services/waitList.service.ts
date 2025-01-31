@@ -8,7 +8,6 @@ export const createWaitList = async (
   req: Request,
   res: Response
 ): Promise<any> => {
-  console.log(req.body, " inside the register service");
   const { email } = req.body;
   const data = req.body;
   let existEmail = null;
@@ -16,32 +15,27 @@ export const createWaitList = async (
   if (!email) {
     return await res.status(400).json({
       message: "Please enter email ",
-      success: false
+      status: false
     });
   }
   if (email && !isValidEmail(email)) {
     return await res.status(400).json({
       message: "Invalid email address supplied",
-      success: false
+      status: false
     });
   }
 
   // check if email already exist
-  existEmail = await db.User.findAll({
+  existEmail = await db.WaitList.findOne({
     where: {
       email
     }
   });
 
-  if (existEmail.length > 0)
+  if (existEmail !== null)
     return await res
       .status(400)
-      .json({ message: "Email already exist", success: false });
-
-  let isActive: boolean = false;
-  if (data.googleId) {
-    isActive = true;
-  }
+      .json({ message: "Email already exist", status: false });
 
   try {
     const waitListDetails = {
@@ -49,47 +43,36 @@ export const createWaitList = async (
       fullName: data.fullName,
       email: email ? email.toLowerCase().trim() : null,
       businessType: data.businessType,
-      title: data.title
+      title: data.title,
+      isDeleted: false
     };
 
-    //insert data into the User.Create
-    const dataUser = await db.WaitList.create(waitListDetails);
+    //insert data into the WaitList.Create
+    const dataWaitList = await db.WaitList.create(waitListDetails);
     //delete userDetails.password;
     return await res.status(201).json({
-      message: "New WaitlList registered successfully",
-      data: dataUser,
-      success: true
+      message: "New WaitList added successfully",
+      data: dataWaitList,
+      status: true
     });
   } catch (err: any) {
-    return await res.status(500).json({ message: err.message });
+    return await res.status(500).json({ message: err.message, status: false });
   }
 };
 
 export const list = async (req: Request, res: Response): Promise<any> => {
-  const currentPage = req.body.currentPage || 1;
+  const currentPage = req.body.currentPage || 0;
   const pageSize = req.body.pageSize || 10;
-  const { uuid } = req.body;
-  const data = req.body;
 
-  let query = await db.WaitList.findAll({
-    where: {
-      [Op.and]: [
-        {
-          uuid
-        },
-        {
-          isDeleted: false
-        }
-      ]
-    }
+  const { rows, count } = await db.WaitList.findAndCountAll({
+    limit: pageSize,
+    offset: currentPage
   });
 
-  const [result, total] = await query.getManyAndCount();
-
   return await res.status(200).json({
-    result,
+    rows,
     pagination: {
-      total,
+      count,
       currentPage,
       pageSize
     }

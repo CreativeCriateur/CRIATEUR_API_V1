@@ -1,7 +1,12 @@
 import { Router, Request, Response } from "express";
 import {
   handleCreateUser,
-  handlePhotoUpload
+  handleLoginUser,
+  handlePhotoUpload,
+  handleVerifyOtp,
+  handleGetListUser,
+  handleGetUserById,
+  handleGetAllUser
 } from "../controllers/user.controller";
 import multer from "multer";
 
@@ -78,7 +83,7 @@ router.post("/create-user", (req: Request, res: Response): any => {
  * @swagger
  * /v1/users/register:
  *   post:
- *     summary: Create a new user
+ *     summary: Sign up as a new User
  *     description: Adds a new user to the system
  *     tags:
  *       - Users
@@ -89,30 +94,18 @@ router.post("/create-user", (req: Request, res: Response): any => {
  *           schema:
  *             type: object
  *             properties:
- *               firstName:
+ *               fullName:
  *                 type: string
- *                 example: john
- *               lastName:
- *                 type: string
- *                 example: Doe
- *               primaryPhone:
- *                 type: string
- *                 example: 2347051235678
+ *                 example: Kelvin Joe
  *               email:
  *                 type: string
- *                 example: johnkenny@example.com
+ *                 example: kelvin20@example.com
  *               password:
  *                 type: string
  *                 example: Mypassword123
- *               gender:
+ *               confirmPassword:
  *                 type: string
- *                 example: male
- *               country:
- *                 type: string
- *                 example: NG
- *               maritalStatus:
- *                 type: string
- *                 example: single
+ *                 example: Mypassword123
  *     responses:
  *       201:
  *         description: User created successfully
@@ -124,9 +117,9 @@ router.post("/create-user", (req: Request, res: Response): any => {
  *                 id:
  *                   type: string
  *                   example: 12345
- *                 username:
+ *                 fullName:
  *                   type: string
- *                   example: johndoe
+ *                   example: john doe
  *                 email:
  *                   type: string
  *                   example: johndoe@example.com
@@ -135,30 +128,144 @@ router.post("/create-user", (req: Request, res: Response): any => {
  *       500:
  *         description: Server error
  */
+
 router.route("/register").post(handleCreateUser);
 
 /**
  * @swagger
- * /v1/users/{id}:
+ * /v1/users/login:
+ *   post:
+ *     summary: Login as a verified User
+ *     description: Login as a verified user
+ *     tags:
+ *       - Users
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: kelvin20@example.com
+ *               password:
+ *                 type: string
+ *                 example: Mypassword123
+ *     responses:
+ *       201:
+ *         description: Login successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: number
+ *                   example: 123
+ *                 uuid:
+ *                   type: string
+ *                   example: 12398u-8177827
+ *                 email:
+ *                   type: string
+ *                   example: johndoe@example.com
+ *       400:
+ *         description: Invalid input
+ *       500:
+ *         description: Server error
+ */
+
+router.route("/login").post(handleLoginUser);
+
+/**
+ * @swagger
+ * /v1/users/verifyOtp:
+ *   post:
+ *     summary: Verify an Otp sent to the user email
+ *     description: Verify an Otp to make the user active
+ *     tags:
+ *       - Users
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: kelvin20@example.com
+ *               otp:
+ *                 type: string
+ *                 example: 129987
+ *     responses:
+ *       201:
+ *         description: Email verified successfully, you can now login
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: number
+ *                   example: 123
+ *                 uuid:
+ *                   type: string
+ *                   example: 12398u-8177827
+ *                 email:
+ *                   type: string
+ *                   example: johndoe@example.com
+ *       400:
+ *         description: Invalid input
+ *       500:
+ *         description: Server error
+ */
+
+router.route("/verifyOtp").post(handleVerifyOtp);
+
+/**
+ * @swagger
+ * /v1/users/list:
  *   get:
- *     summary: Get user by ID
+ *     summary: List endpoint
+ *     tags:
+ *       - Users
+ *     description: Returns a list of User data
+ *     responses:
+ *       200:
+ *         description: A JSON response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 result:
+ *                   type: string
+ *                 pagination:
+ *                   type: string
+ */
+router.route("/list").get(handleGetListUser);
+
+/**
+ * @swagger
+ * /v1/users/{uuid}:
+ *   get:
+ *     summary: Get user by the uuID
  *     tags:
  *       - Users
  *     parameters:
- *       - name: id
+ *       - name: uuid
  *         in: path
  *         required: true
  *         schema:
  *           type: string
- *         description: The user ID
+ *         description: The user uuid
  *     responses:
  *       200:
  *         description: User details
  */
-router.get("/:id", (req, res) => {
-  const { id } = req.params;
-  res.send({ id, name: "John Doe" });
-});
+
+router.route("/:id").get(handleGetUserById);
 
 router.route("/photo/upload").post(handlePhotoUpload, upload.single("image"));
 

@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 import db from "../models";
 import { isValidPassword, isValidEmail, checkPassword } from "../utils/helpers";
 import { Authentication } from "../utils/auth";
+import { stat } from "fs";
 
 export const createUser = async (req: Request, res: Response): Promise<any> => {
   console.log(req.body, " inside the register service");
@@ -37,13 +38,13 @@ export const createUser = async (req: Request, res: Response): Promise<any> => {
     });
   }
   // check if email already exist
-  existEmail = await db.User.findAll({
+  existEmail = await db.User.findOne({
     where: {
       email
     }
   });
 
-  if (existEmail.length > 0)
+  if (existEmail !== null)
     return await res
       .status(400)
       .json({ message: "Email already exist", status: false });
@@ -64,10 +65,10 @@ export const createUser = async (req: Request, res: Response): Promise<any> => {
       uuid: uuidv4(),
       email: email ? email.toLowerCase().trim() : null,
       password: newPassword,
-      confirmPassword,
+      confirmPassword: confirmPassword,
       googleId: data.googleId,
       isNewUser: true,
-      isDelete: false,
+      isDeleted: false,
       isActive
     };
 
@@ -75,15 +76,15 @@ export const createUser = async (req: Request, res: Response): Promise<any> => {
     const dataUser = await db.User.create(userDetails);
 
     const otp = generateOtp();
-    dataUser.otp = otp;
-    dataUser.otpExpiry = new Date(Date.now() * 10 * 60 * 1000);
-    await db.User.create(dataUser);
+    console.log("otp ", otp);
+    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
+    await dataUser.update({ otp, otpExpiry });
     sendOtpToUser(email, otp);
     //delete userDetails.password;
     return await res.status(201).json({
       message:
         "New User registered successfully Please verify your OTP sent to email",
-      data: dataUser,
+      data: updateUser,
       status: true
     });
   } catch (err: any) {
@@ -92,21 +93,12 @@ export const createUser = async (req: Request, res: Response): Promise<any> => {
 };
 
 export const list = async (req: Request, res: Response): Promise<any> => {
-  const currentPage = req.body.currentPage || 1;
+  const currentPage = req.body.currentPage || 0;
   const pageSize = req.body.pageSize || 10;
-  const { uuid } = req.body;
   const data = req.body;
-
   let query = await db.User.findAll({
     where: {
-      [Op.and]: [
-        {
-          uuid
-        },
-        {
-          isDeleted: false
-        }
-      ]
+      isDeleted: false
     }
   });
 
@@ -122,12 +114,15 @@ export const list = async (req: Request, res: Response): Promise<any> => {
   //   );
   // }
 
-  const [result, total] = await query.getManyAndCount();
+  const { rows, count } = await db.User.findAndCountAll({
+    limit: pageSize,
+    offset: currentPage
+  });
 
   return await res.status(200).json({
-    result,
+    rows,
     pagination: {
-      total,
+      count,
       currentPage,
       pageSize
     }
@@ -151,7 +146,7 @@ export const updateUser = async (req: Request, res: Response): Promise<any> => {
           uuid
         },
         {
-          isDelete: false
+          isDeleted: false
         }
       ]
     }
@@ -182,7 +177,7 @@ export const updateUser = async (req: Request, res: Response): Promise<any> => {
   user = Object.assign(user, data);
 
   try {
-    await db.User.create(user);
+    await db.User.save(user);
 
     return await res.status(200).json({ user });
   } catch (err: any) {
@@ -199,11 +194,11 @@ export const deleteUserAccount = async (
   try {
     const { uuid, deleteReason } = req.body;
     const user = await db.User.findOne({
-      where: { uuid, isDelete: false }
+      where: { uuid, isDeleted: false }
     });
     if (!user) throw new Error("user with the uuid does not exist");
     const updateData = {
-      isDelete: true,
+      isDeleted: true,
       deletedAt: new Date().toISOString(),
       deleteReason: deleteReason || user.deleteReason
     };
@@ -281,12 +276,12 @@ export const resendOtpToUser = async (
 export const loginUser = async (req: Request, res: Response): Promise<any> => {
   const { email, password } = req.body;
 
-  const condition = { email: email.toLowerCase().trim(), isDelete: false };
+  const condition = { email: email.toLowerCase().trim(), isDeleted: false };
 
   //let user: any;
 
   try {
-    const user = await db.User.findAll({
+    const user = await db.User.findOne({
       where: condition
     });
 
@@ -318,11 +313,13 @@ export const loginUser = async (req: Request, res: Response): Promise<any> => {
     if (!flag) {
       throw new Error("Invalid Password");
     }
-    let resp: any = Object.assign({}, user);
+    let data: any = Object.assign({}, user);
 
-    resp.passwordExist = true;
+    data.passwordExist = true;
 
-    return await res.status(200).json({ resp, status: true });
+    return await res
+      .status(200)
+      .json({ message: "Login successfully", data, status: true });
   } catch (err: any) {
     return await res.status(500).json({ error: err.message, status: false });
   }
@@ -387,14 +384,17 @@ export const verifyOTP = async (req: Request, res: Response): Promise<any> => {
       .json({ message: "Invaid or expired OTP", status: false });
   }
 
-  user.active = true;
+  user.isActive = true;
   user.isNewUser = false;
   user.otp = "";
-  user.otpExpiry = "";
+  user.otpExpiry = undefined;
 
-  await db.User.create(user);
+  console.log("user bef", user);
 
-  return await res.status(200).json({
+  await user.save();
+  console.log("use data", user);
+
+  return await res.status(201).json({
     message: "Email verified successfully, you can now login",
     status: true
   });
@@ -514,7 +514,7 @@ export const verifyEmail = async (
   }
 
   const user = await db.User.findOne({
-    where: { email: req.body.email, isDelete: false }
+    where: { email: req.body.email, isDeleted: false }
   });
   if (user) {
     return await res.status(200).json({
@@ -532,16 +532,21 @@ export const getUserById = async (
   req: Request,
   res: Response
 ): Promise<any> => {
+  const { id } = req.params;
   const user = await db.User.findOne({
-    where: { uuid: req.body.uuid, isDelete: false }
+    where: { uuid: id, isDeleted: false }
   });
 
-  if (!user) throw new Error("User with id does not exist");
+  if (!user) {
+    return await res
+      .status(400)
+      .json({ messge: "User with id does not exist", status: false });
+  }
 
   const response = {
     ...user,
     passwordExist: user.password ? true : false,
-    success: true
+    status: true
   };
 
   return await res.status(200).json(response);
@@ -580,8 +585,8 @@ export const verifyPhone = async (
   const user = await db.User.findOne({
     where: {
       [Op.and]: [
-        { primaryPhone: primaryPhone, isDelete: false },
-        { secondaryPhone: secondaryPhone, isDelete: false }
+        { primaryPhone: primaryPhone, isDeleted: false },
+        { secondaryPhone: secondaryPhone, isDeleted: false }
       ]
     }
   });
@@ -596,4 +601,95 @@ export const verifyPhone = async (
       .status(200)
       .json({ status: true, message: "Phone number is available" });
   }
+};
+
+export const createAccountInfo = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  const { userId, phoneNumber, username, organization, position, address } =
+    req.body;
+  const user = await db.User.findOne({
+    where: { uuid: userId, isDeleted: false }
+  });
+
+  if (!user) {
+    return await res
+      .status(400)
+      .json({ message: "User not found", status: false });
+  }
+
+  try {
+    const accountInfo = {
+      uuid: uuidv4(),
+      userId,
+      username,
+      phoneNumber,
+      organization,
+      position,
+      address
+    };
+    const accountData = await db.AccountInfo.create(accountInfo);
+
+    return await res.status(201).json({ message: "", status: true });
+  } catch (error: any) {
+    return await res
+      .status(500)
+      .json({ message: error.message, status: false });
+  }
+};
+
+export const updateAccountInfo = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  const { userId, accountInfoId } = req.body;
+  const data = req.body;
+  let user = await db.User.findOne({
+    where: {
+      [Op.and]: [
+        {
+          uuid: userId
+        },
+        {
+          isDeleted: false
+        }
+      ]
+    }
+  });
+
+  if (!user) throw new Error("User id not found");
+
+  if (data.password) {
+    if (user.password) {
+      /* Checking if the new password is different from the old password. */
+      const oldSalt = user.password.split(".")[0];
+      const oldhashPassword = user.password.split(".")[1];
+
+      if (
+        Authentication.comparePassword(data.password, oldhashPassword, oldSalt)
+      ) {
+        throw new Error("New password must be different from old password");
+      }
+    }
+
+    data.password = data.password.trim();
+    const salt = Authentication.generateSalt();
+    const password = Authentication.generatePasswordHash(data.password, salt);
+    user.password = `${salt}.${password}`;
+    user = await db.User.create(user);
+  }
+
+  user = Object.assign(user, data);
+
+  try {
+    await db.User.create(user);
+
+    return await res.status(200).json({ user });
+  } catch (err: any) {
+    return await res
+      .status(500)
+      .json({ Error: "Error updating user " + err.message });
+  }
+  return;
 };
