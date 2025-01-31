@@ -25,11 +25,11 @@ export const config = {
   isProduction: envVars.NODE_ENV === "production" ? true : false,
   port: envVars.PORT,
   db: {
-    port: envVars.PGPORT,
-    host: envVars.PGHOST,
-    username: envVars.PGUSERNAME,
-    password: envVars.PGPASSWORD,
-    name: envVars.PGDATABASE,
+    port: envVars.DBPORT,
+    host: envVars.DBHOST,
+    username: envVars.DBUSERNAME,
+    password: envVars.DBPASSWORD,
+    name: envVars.DBDATABASE,
     logging: envVars.DATABASE_LOGGING
   }
 };

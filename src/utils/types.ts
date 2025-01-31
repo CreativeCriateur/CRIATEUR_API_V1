@@ -64,15 +64,22 @@ export enum MaritalStatus {
   MARRIED = "married"
 }
 
-export enum bookingStatus {
+export enum BookingStatus {
   PENDING = "pending",
   CONFIRMED = "confirmed",
   CANCELLED = "cancelled"
 }
 
-export const serviceType = {
+export const ServiceType = {
   Content: "Content Creation & Strategy",
   Branding: "Branding and Design",
   Marketing: "Marketing Consulting",
   Digital: "Digital Marketing Management"
 };
+
+export enum BusinessType {
+  Content = "Content Creation & Strategy",
+  Branding = "Branding and Design",
+  Marketing = "Marketing Consulting",
+  Digital = "Digital Marketing Management"
+}

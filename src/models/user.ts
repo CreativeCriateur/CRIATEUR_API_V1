@@ -1,18 +1,12 @@
 "use strict";
-import { genderType, MaritalStatus } from "../utils/types";
 import { Model, DataTypes, Sequelize } from "sequelize";
 
 interface userAttributes {
   id: number;
   uuid: string;
-  salutation: string;
-  firstName: string;
-  lastName: string;
   email: string;
   password: string;
-  primaryPhone: string;
-  secondaryPhone: string;
-  address: string;
+  confirmPassword: string;
   isActive: boolean;
   isNewUser: boolean;
   isDeleted: boolean;
@@ -22,10 +16,8 @@ interface userAttributes {
   googleId: string;
   facebookId: string;
   otp: string;
-  country: string;
+  otpExpiry: Date;
   imageUrl: string;
-  gender: string;
-  maritalStatus: string;
   registrationToken: string;
 }
 
@@ -38,14 +30,9 @@ export class User extends Model<userAttributes> implements userAttributes {
 
   id!: number;
   uuid!: string;
-  salutation!: string;
-  firstName!: string;
-  lastName!: string;
   email!: string;
   password!: string;
-  primaryPhone!: string;
-  secondaryPhone!: string;
-  address!: string;
+  confirmPassword!: string;
   isActive!: boolean;
   isNewUser!: boolean;
   isDeleted!: boolean;
@@ -55,16 +42,18 @@ export class User extends Model<userAttributes> implements userAttributes {
   googleId!: string;
   facebookId!: string;
   otp!: string;
-  country!: string;
+  otpExpiry!: Date;
   imageUrl!: string;
-  gender!: string;
-  maritalStatus!: string;
   registrationToken!: string;
 
   static associate(models: any) {
     // define association here
     this.hasMany(models.Post, { foreignKey: "userId", as: "posts" });
     this.hasMany(models.Booking, { foreignKey: "userId", as: "booking" });
+    this.hasMany(models.AccountInfo, {
+      foreignKey: "userId",
+      as: "accountInfo"
+    });
     this.belongsToMany(models.Project, {
       through: "ProjectAssignments"
     });
@@ -88,17 +77,6 @@ export class User extends Model<userAttributes> implements userAttributes {
           defaultValue: DataTypes.UUIDV4,
           allowNull: false
         },
-        salutation: {
-          type: DataTypes.STRING
-        },
-        firstName: {
-          type: DataTypes.STRING,
-          allowNull: false
-        },
-        lastName: {
-          type: DataTypes.STRING,
-          allowNull: false
-        },
         email: {
           type: DataTypes.STRING,
           allowNull: false,
@@ -108,14 +86,9 @@ export class User extends Model<userAttributes> implements userAttributes {
           type: DataTypes.STRING,
           allowNull: false
         },
-        primaryPhone: {
-          type: DataTypes.STRING
-        },
-        secondaryPhone: {
-          type: DataTypes.STRING
-        },
-        address: {
-          type: DataTypes.STRING
+        confirmPassword: {
+          type: DataTypes.STRING,
+          allowNull: false
         },
         isDeleted: {
           type: DataTypes.BOOLEAN,
@@ -133,9 +106,6 @@ export class User extends Model<userAttributes> implements userAttributes {
         isNewUser: {
           type: DataTypes.BOOLEAN
         },
-        gender: {
-          type: DataTypes.ENUM(...Object.values(genderType))
-        },
         appleId: {
           type: DataTypes.STRING
         },
@@ -148,15 +118,11 @@ export class User extends Model<userAttributes> implements userAttributes {
         otp: {
           type: DataTypes.STRING
         },
-        country: {
-          type: DataTypes.STRING,
-          defaultValue: "NG"
+        otpExpiry: {
+          type: DataTypes.DATE
         },
         imageUrl: {
           type: DataTypes.STRING
-        },
-        maritalStatus: {
-          type: DataTypes.ENUM(...Object.values(MaritalStatus))
         },
         registrationToken: {
           type: DataTypes.STRING,

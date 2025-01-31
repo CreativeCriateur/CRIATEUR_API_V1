@@ -7,33 +7,33 @@ import { Authentication } from "../utils/auth";
 
 export const createUser = async (req: Request, res: Response): Promise<any> => {
   console.log(req.body, " inside the register service");
-  const { salutation, firstName, lastName, email, password, primaryPhone } =
-    req.body;
+  const { email, password, confirmPassword } = req.body;
   const data = req.body;
   let existEmail = null;
-  if (!email && !password && !firstName && !lastName)
-    return await res.status(400).json({
-      message: "firstName, lastName, email and password are required",
-      success: false
-    });
 
-  if (!email && !primaryPhone) {
+  if (!email && !password) {
     return await res.status(400).json({
-      message: "Please enter either/both phone number or email",
-      success: false
+      message: "Please enter either/both email or password",
+      status: false
+    });
+  }
+  if (password !== confirmPassword) {
+    return await res.status(400).json({
+      message: "confirmPassword must be equal to Password",
+      status: false
     });
   }
   if (email && !isValidEmail(email)) {
     return await res.status(400).json({
       message: "Invalid email address supplied",
-      success: false
+      status: false
     });
   }
   // check password is valid
   if (password && !isValidPassword(password)) {
     return await res.status(400).json({
       message: "Password must be at least 5 characters with 1 uppercase",
-      success: false
+      status: false
     });
   }
   // check if email already exist
@@ -46,10 +46,10 @@ export const createUser = async (req: Request, res: Response): Promise<any> => {
   if (existEmail.length > 0)
     return await res
       .status(400)
-      .json({ message: "Email already exist", success: false });
+      .json({ message: "Email already exist", status: false });
 
   let isActive: boolean = false;
-  if (data.facebookId || data.googleId || data.appleId) {
+  if (data.googleId) {
     isActive = true;
   }
 
@@ -62,21 +62,10 @@ export const createUser = async (req: Request, res: Response): Promise<any> => {
     const newPassword = `${salt}.${passwordHash}`;
     const userDetails = {
       uuid: uuidv4(),
-      salutation,
-      firstName,
-      lastName,
       email: email ? email.toLowerCase().trim() : null,
       password: newPassword,
-      primaryPhone: data.primaryPhone,
-      secondaryPhone: data.secondaryPhone,
-      address: data.address,
-      country: data.country,
-      maritalStatus: data.maritalStatus,
-      gender: data.gender,
-      imageUrl: data.imageUrl,
-      facebookId: data.facebookId,
+      confirmPassword,
       googleId: data.googleId,
-      appleId: data.appleId,
       isNewUser: true,
       isDelete: false,
       isActive
@@ -84,14 +73,21 @@ export const createUser = async (req: Request, res: Response): Promise<any> => {
 
     //insert data into the User.Create
     const dataUser = await db.User.create(userDetails);
+
+    const otp = generateOtp();
+    dataUser.otp = otp;
+    dataUser.otpExpiry = new Date(Date.now() * 10 * 60 * 1000);
+    await db.User.create(dataUser);
+    sendOtpToUser(email, otp);
     //delete userDetails.password;
     return await res.status(201).json({
-      message: "New User registered successfully",
+      message:
+        "New User registered successfully Please verify your OTP sent to email",
       data: dataUser,
-      success: true
+      status: true
     });
   } catch (err: any) {
-    return await res.status(500).json({ message: err.message });
+    return await res.status(500).json({ message: err.message, status: false });
   }
 };
 
@@ -113,14 +109,6 @@ export const list = async (req: Request, res: Response): Promise<any> => {
       ]
     }
   });
-
-  if (req.body.country) {
-    query = query.andWhere("user.country = :country", { ...data });
-  }
-
-  if (req.body.customerType) {
-    query = query.andWhere("user.type = :customerType", { ...data });
-  }
 
   if (req.body.isActive) {
     query = query.andWhere("user.active = :type", { ...data });
@@ -235,18 +223,65 @@ export const deleteUserAccount = async (
 };
 
 const generateOtp = () => {
+  // crypto.randomInt(100000, 999999).toString();
   return Math.floor(Math.random() * (999999 - 111111) + 111111).toString();
 };
 
-export const loginUser = async (req: Request, res: Response): Promise<any> => {
-  const { email, password, phoneNumber } = req.body;
-  let condition;
+const sendOtpToUser = (to: string, otp: string) => {};
 
-  if (email) {
-    condition = { email: email.toLowerCase().trim(), isDelete: false };
-  } else {
-    condition = { primaryPhone: phoneNumber, isDelete: false };
+export const resendOtpToUser = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  const { email } = req.body;
+  const data = req.body;
+  let user = null;
+
+  if (email && !isValidEmail(email)) {
+    return await res.status(400).json({
+      message: "Invalid email address supplied",
+      success: false
+    });
   }
+
+  user = await db.User.findAll({
+    where: {
+      email
+    }
+  });
+
+  if (!user)
+    return await res
+      .status(400)
+      .json({ message: "User not found", status: false });
+
+  if (user.isActive)
+    return await res
+      .status(400)
+      .json({ message: "User already verified", status: false });
+
+  try {
+    const otp = generateOtp();
+    user.otp = otp;
+    user.otpExpiry = new Date(Date.now() * 10 * 60 * 1000);
+    sendOtpToUser(email, otp);
+    await db.User.create(user);
+
+    return await res.status(201).json({
+      message: "OTP resent successfully! Please verify your OTP sent",
+      status: true
+    });
+  } catch (error: any) {
+    return await res
+      .status(500)
+      .json({ message: error.message, status: false });
+  }
+};
+
+export const loginUser = async (req: Request, res: Response): Promise<any> => {
+  const { email, password } = req.body;
+
+  const condition = { email: email.toLowerCase().trim(), isDelete: false };
 
   //let user: any;
 
@@ -261,7 +296,7 @@ export const loginUser = async (req: Request, res: Response): Promise<any> => {
         .json({ message: "User not found. Please sign up", status: false });
     }
 
-    if (!user.active) {
+    if (!user.isActive) {
       if (user.isNewUser) {
         throw new Error(
           "Email not verified, please check your email for verification link"
@@ -313,6 +348,7 @@ export const loginNoPassword = async (
 
   const otp = generateOtp();
   user.otp = otp;
+  //user.otpExpiry = new Date();
   await db.User.create(user);
   //sendOtpToUser(user, otp);
   const response = {
@@ -326,31 +362,42 @@ export const loginNoPassword = async (
 };
 
 export const verifyOTP = async (req: Request, res: Response): Promise<any> => {
-  const { uuid, otp } = req.body;
+  const { email, otp } = req.body;
   const user = await db.User.findOne({
     where: {
-      uuid,
-      otp
+      email
     }
   });
 
   if (!user) {
-    throw new Error("Invalid verification for this user");
+    return await res
+      .status(400)
+      .json({ message: "User not found", status: false });
   }
 
-  if (!user.active) {
-    if (user.isNewUser) {
-      throw new Error(
-        "Email not verified, please check your email for verification link"
-      );
-    } else {
-      throw new Error("User has been de-activated");
-    }
+  if (user.isActive) {
+    return await res
+      .status(400)
+      .json({ message: "User already verified", status: false });
   }
 
-  const resp: any = Object.assign({}, user);
+  if (user.otp !== otp || user.otpExpiry < new Date()) {
+    return await res
+      .status(400)
+      .json({ message: "Invaid or expired OTP", status: false });
+  }
 
-  return await res.status(200).json(resp);
+  user.active = true;
+  user.isNewUser = false;
+  user.otp = "";
+  user.otpExpiry = "";
+
+  await db.User.create(user);
+
+  return await res.status(200).json({
+    message: "Email verified successfully, you can now login",
+    status: true
+  });
 };
 
 export const updatePassword = async (req: Request, res: Response) => {
