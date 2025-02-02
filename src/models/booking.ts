@@ -3,7 +3,7 @@ import { Model, DataTypes, Sequelize } from "sequelize";
 interface bookingAttributes {
   id: number;
   uuid: string;
-  userId: number;
+  userUuid: string;
   serviceId: number;
   bookingDate: Date;
   status: string;
@@ -23,12 +23,12 @@ export class Booking
       foreignKey: "serviceId",
       as: "service"
     });
-    this.belongsTo(models.User, { foreignKey: "userId", as: "user" });
+    this.belongsTo(models.User, { foreignKey: "userUuid", as: "user" });
   }
   id!: number;
   uuid!: string;
   serviceId!: number;
-  userId!: number;
+  userUuid!: string;
   bookingDate!: Date;
   status!: string;
 
@@ -45,8 +45,8 @@ export class Booking
           type: DataTypes.UUID,
           defaultValue: DataTypes.UUIDV4
         },
-        userId: {
-          type: DataTypes.INTEGER,
+        userUuid: {
+          type: DataTypes.STRING,
           allowNull: false
         },
         serviceId: {

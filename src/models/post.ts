@@ -3,7 +3,7 @@ import { Model, DataTypes, Sequelize } from "sequelize";
 interface postAttributes {
   id: number;
   uuid: string;
-  userId: number;
+  userUuid: string;
   body: string;
 }
 
@@ -15,13 +15,13 @@ export class Post extends Model<postAttributes> implements postAttributes {
    */
   id!: number;
   uuid!: string;
-  userId!: number;
+  userUuid!: string;
   body!: string;
 
   static associate(models: any) {
     // define association here
 
-    this.belongsTo(models.User, { foreignKey: "userId", as: "user" });
+    this.belongsTo(models.User, { foreignKey: "userUuid", as: "user" });
   }
 
   toJSON() {
@@ -41,8 +41,8 @@ export class Post extends Model<postAttributes> implements postAttributes {
           type: DataTypes.STRING,
           allowNull: false
         },
-        userId: {
-          type: DataTypes.INTEGER,
+        userUuid: {
+          type: DataTypes.STRING,
           allowNull: false
         },
         body: {

@@ -1,42 +1,48 @@
 "use strict";
-const { BusinessType } = require("../../dist/utils/types");
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, DataTypes) {
-    await queryInterface.createTable("Waitlists", {
+    await queryInterface.createTable("accountInfos", {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: DataTypes.INTEGER
       },
-      uuid: {
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4
-      },
-      fullName: {
-        type: DataTypes.STRING
-      },
-      email: {
-        type: DataTypes.STRING
-      },
-      businessType: {
-        type: DataTypes.ENUM(...Object.values(BusinessType))
-      },
-      title: {
+      userUuid: {
         type: DataTypes.STRING,
-        allowNull: false
+        references: {
+          model: "users", // The name of the Users table
+          key: "uuid" // The column to reference in the Users table
+        },
+        onDelete: "CASCADE", // Action when the referenced user is deleted
+        onUpdate: "CASCADE" // Action when the referenced user is updated
+      },
+      userName: {
+        type: DataTypes.STRING
+      },
+      phoneNumber: {
+        type: DataTypes.STRING
+      },
+      organization: {
+        type: DataTypes.STRING
+      },
+      position: {
+        type: DataTypes.STRING
+      },
+      address: {
+        type: DataTypes.STRING
       },
       isDeleted: {
         type: DataTypes.BOOLEAN,
         defaultValue: false
       },
-      deletedAt: {
-        type: DataTypes.DATE
-      },
       deleteReason: {
         type: DataTypes.STRING
+      },
+      deletedAt: {
+        type: DataTypes.DATE
       },
       createdAt: {
         allowNull: false,
@@ -48,7 +54,8 @@ module.exports = {
       }
     });
   },
+
   async down(queryInterface, DataTypes) {
-    await queryInterface.dropTable("Waitlists");
+    await queryInterface.dropTable("accountInfos");
   }
 };

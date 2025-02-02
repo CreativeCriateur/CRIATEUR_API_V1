@@ -20,6 +20,12 @@ class Permission
    */
   static associate(models: any) {
     // define association here
+    this.belongsTo(models.Resource, { foreignKey: "resourceId" });
+    this.belongsToMany(models.Role, {
+      through: "rolePermissions",
+      foreignKey: "permissionId",
+      onDelete: "CASCADE"
+    });
   }
 
   static initModel(sequelize: Sequelize) {
@@ -31,10 +37,18 @@ class Permission
           primaryKey: true,
           allowNull: false
         },
-        resourceId: {
-          type: DataTypes.INTEGER
+        name: {
+          type: DataTypes.STRING,
+          unique: true
         },
-        name: { type: DataTypes.STRING }
+        resourceId: {
+          type: DataTypes.INTEGER,
+          allowNull: false,
+          references: {
+            model: "resources",
+            key: "id"
+          }
+        }
       },
       {
         sequelize,

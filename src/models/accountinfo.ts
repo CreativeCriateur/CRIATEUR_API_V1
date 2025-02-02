@@ -4,9 +4,9 @@ import { Model, DataTypes, Sequelize } from "sequelize";
 interface accountInfoAttributes {
   id: number;
   uuid: string;
-  userId: number;
+  userUuid: string;
   phoneNumber: string;
-  username: string;
+  userName: string;
   organization: string;
   position: string;
   address: string;
@@ -21,9 +21,9 @@ export class AccountInfo
 {
   id!: number;
   uuid!: string;
-  userId!: number;
+  userUuid!: string;
   phoneNumber!: string;
-  username!: string;
+  userName!: string;
   organization!: string;
   position!: string;
   address!: string;
@@ -40,7 +40,10 @@ export class AccountInfo
    */
   static associate(models: any) {
     // define association here
-    this.belongsTo(models.User, { foreignKey: "userId", as: "user" });
+    this.belongsTo(models.User, {
+      foreignKey: "userUuid", // Specifies the foreign key in AccountInfos pointing to User
+      targetKey: "uuid" // Refers to the uuid column in User
+    });
   }
 
   static initModel(sequelize: Sequelize) {
@@ -53,18 +56,17 @@ export class AccountInfo
           allowNull: false
         },
         uuid: {
-          type: DataTypes.UUID,
-          defaultValue: DataTypes.UUIDV4,
+          type: DataTypes.STRING,
           allowNull: false
         },
-        userId: {
-          type: DataTypes.INTEGER,
+        userUuid: {
+          type: DataTypes.STRING,
           allowNull: false
         },
-        phoneNumber: {
+        userName: {
           type: DataTypes.STRING
         },
-        username: {
+        phoneNumber: {
           type: DataTypes.STRING
         },
         organization: {
@@ -80,11 +82,11 @@ export class AccountInfo
           type: DataTypes.BOOLEAN,
           defaultValue: false
         },
-        deletedAt: {
-          type: DataTypes.DATE
-        },
         deleteReason: {
           type: DataTypes.STRING
+        },
+        deletedAt: {
+          type: DataTypes.DATE
         }
       },
       {

@@ -15,21 +15,6 @@ import {
   updateAccountInfo
 } from "../services/user.service";
 
-export const handleCreateUser = async (
-  req: Request,
-  res: Response
-): Promise<any> => {
-  console.log("inside the register controller");
-  return await createUser(req, res);
-};
-
-export const handleLoginUser = async (
-  req: Request,
-  res: Response
-): Promise<any> => {
-  return await loginUser(req, res);
-};
-
 export const handleGetListUser = async (req: Request, res: Response) => {
   return await list(req, res);
 };

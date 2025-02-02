@@ -31,5 +31,6 @@ export const config = {
     password: envVars.DBPASSWORD,
     name: envVars.DBDATABASE,
     logging: envVars.DATABASE_LOGGING
-  }
+  },
+  secretKey: envVars.SECRET_JWT_KEY
 };

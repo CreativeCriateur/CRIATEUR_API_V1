@@ -44,8 +44,7 @@ export class Payment
           allowNull: false
         },
         uuid: {
-          type: DataTypes.UUID,
-          defaultValue: DataTypes.UUIDV4,
+          type: DataTypes.STRING,
           allowNull: false
         },
         firstName: {

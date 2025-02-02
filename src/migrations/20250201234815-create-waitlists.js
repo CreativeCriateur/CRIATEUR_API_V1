@@ -1,11 +1,10 @@
 "use strict";
-
-const { TransactionType, paymentStatus } = require("../../dist/utils/types");
+const { BusinessType } = require("../../dist/utils/types");
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, DataTypes) {
-    await queryInterface.createTable("payments", {
+    await queryInterface.createTable("waitlists", {
       id: {
         allowNull: false,
         autoIncrement: true,
@@ -14,28 +13,29 @@ module.exports = {
       },
       uuid: {
         type: DataTypes.STRING,
-        allowNull: false
+        unique: true
       },
-      firstName: {
+      fullName: {
         type: DataTypes.STRING
       },
-      lastName: {
+      email: {
         type: DataTypes.STRING
       },
-      paymentType: {
-        type: DataTypes.ENUM(...Object.values(TransactionType)),
-        allowNull: false
+      businessType: {
+        type: DataTypes.ENUM(...Object.values(BusinessType))
       },
-      status: {
-        type: DataTypes.ENUM(...Object.values(paymentStatus))
+      title: {
+        type: DataTypes.STRING
       },
-      userId: {
-        type: DataTypes.INTEGER,
-        allowNull: false
+      isDeleted: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
       },
-      amount: {
-        type: DataTypes.DECIMAL(10, 2),
-        allowNull: false
+      deleteReason: {
+        type: DataTypes.STRING
+      },
+      deletedAt: {
+        type: DataTypes.DATE
       },
       createdAt: {
         allowNull: false,
@@ -47,7 +47,8 @@ module.exports = {
       }
     });
   },
+
   async down(queryInterface, DataTypes) {
-    await queryInterface.dropTable("payments");
+    await queryInterface.dropTable("waitlists");
   }
 };

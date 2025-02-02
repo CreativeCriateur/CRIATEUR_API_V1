@@ -4,10 +4,8 @@ import { v4 as uuidv4 } from "uuid";
 import db from "../models";
 import { isValidPassword, isValidEmail, checkPassword } from "../utils/helpers";
 import { Authentication } from "../utils/auth";
-import { stat } from "fs";
 
 export const createUser = async (req: Request, res: Response): Promise<any> => {
-  console.log(req.body, " inside the register service");
   const { email, password, confirmPassword } = req.body;
   const data = req.body;
   let existEmail = null;
@@ -65,11 +63,12 @@ export const createUser = async (req: Request, res: Response): Promise<any> => {
       uuid: uuidv4(),
       email: email ? email.toLowerCase().trim() : null,
       password: newPassword,
-      confirmPassword: confirmPassword,
+      confirmPassword: newPassword,
       googleId: data.googleId,
       isNewUser: true,
       isDeleted: false,
-      isActive
+      isActive,
+      fullName: data.fullName
     };
 
     //insert data into the User.Create
@@ -79,14 +78,8 @@ export const createUser = async (req: Request, res: Response): Promise<any> => {
     console.log("otp ", otp);
     const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
     await dataUser.update({ otp, otpExpiry });
-    sendOtpToUser(email, otp);
-    //delete userDetails.password;
-    return await res.status(201).json({
-      message:
-        "New User registered successfully Please verify your OTP sent to email",
-      data: updateUser,
-      status: true
-    });
+    //sendOtpToUser(email, otp);
+    return dataUser;
   } catch (err: any) {
     return await res.status(500).json({ message: err.message, status: false });
   }
@@ -317,9 +310,7 @@ export const loginUser = async (req: Request, res: Response): Promise<any> => {
 
     data.passwordExist = true;
 
-    return await res
-      .status(200)
-      .json({ message: "Login successfully", data, status: true });
+    return data;
   } catch (err: any) {
     return await res.status(500).json({ error: err.message, status: false });
   }
@@ -389,10 +380,10 @@ export const verifyOTP = async (req: Request, res: Response): Promise<any> => {
   user.otp = "";
   user.otpExpiry = undefined;
 
-  console.log("user bef", user);
+  //console.log("user bef", user);
 
   await user.save();
-  console.log("use data", user);
+  //console.log("use data", user);
 
   return await res.status(201).json({
     message: "Email verified successfully, you can now login",
@@ -622,7 +613,7 @@ export const createAccountInfo = async (
   try {
     const accountInfo = {
       uuid: uuidv4(),
-      userId,
+      userUuId: user.uuid,
       username,
       phoneNumber,
       organization,
@@ -691,5 +682,4 @@ export const updateAccountInfo = async (
       .status(500)
       .json({ Error: "Error updating user " + err.message });
   }
-  return;
 };

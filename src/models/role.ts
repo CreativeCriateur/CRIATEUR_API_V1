@@ -17,6 +17,11 @@ class Role extends Model<roleAttributes> implements roleAttributes {
 
   static associate(models: any) {
     // define association here
+    this.belongsToMany(models.Permission, {
+      through: "rolePermissions",
+      foreignKey: "roleId",
+      onDelete: "CASCADE"
+    });
   }
 
   static initModel(sequelize: Sequelize) {
@@ -28,7 +33,10 @@ class Role extends Model<roleAttributes> implements roleAttributes {
           primaryKey: true,
           allowNull: false
         },
-        name: { type: DataTypes.STRING }
+        name: {
+          type: DataTypes.STRING,
+          unique: true
+        }
       },
       {
         sequelize,

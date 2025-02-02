@@ -83,3 +83,9 @@ export enum BusinessType {
   Marketing = "Marketing Consulting",
   Digital = "Digital Marketing Management"
 }
+
+export enum RoleType {
+  User = "User",
+  Admin = "Admin",
+  ThemeUser = "ThemeUser"
+}

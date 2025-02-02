@@ -19,6 +19,10 @@ class Resource extends Model<resourceAttributes> implements resourceAttributes {
 
   static associate(models: any) {
     // define association here
+    this.hasMany(models.Permission, {
+      foreignKey: "resourceId",
+      onDelete: "CASCADE"
+    });
   }
 
   static initModel(sequelize: Sequelize) {
@@ -30,8 +34,15 @@ class Resource extends Model<resourceAttributes> implements resourceAttributes {
           primaryKey: true,
           allowNull: false
         },
-        name: { type: DataTypes.STRING },
-        url: { type: DataTypes.STRING }
+        name: {
+          type: DataTypes.STRING,
+          allowNull: false,
+          unique: true
+        },
+        url: {
+          type: DataTypes.STRING,
+          allowNull: false
+        }
       },
       {
         sequelize,

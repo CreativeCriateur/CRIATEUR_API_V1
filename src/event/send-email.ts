@@ -1,10 +1,8 @@
 import path from "path";
 import * as fs from "fs";
-import { SUPPORTED_FRENCH_COUNTRY } from "../utils";
 import Mustache from "mustache";
 import { config } from "../config";
 import { publishMessage } from "../redis/pubsub";
-import * as frenchEmailTranslation from "../i18/fr/email.json";
 
 type EmailPayload = {
   recipients: string[];
@@ -21,12 +19,8 @@ const toTitleCase = (str: any) => {
   });
 };
 
-export const getTemplateFile = (country = "NG", templateName: string) => {
+export const getTemplateFile = (templateName: string) => {
   let templatePath = `../../templates/${templateName}.html`;
-  if (SUPPORTED_FRENCH_COUNTRY.includes(country.toUpperCase())) {
-    templatePath = `../../templates/fr/${templateName}.html`;
-  }
-
   return templatePath;
 };
 
@@ -40,81 +34,46 @@ export const sendEmail = async (payload: EmailPayload) => {
   publishMessage("EmailSendEvent", JSON.stringify(data));
 };
 
-export const handleTranslation = (country = "NG", text: string) => {
-  let translatedText = text;
-  if (SUPPORTED_FRENCH_COUNTRY.includes(country.toUpperCase())) {
-    const translationObject = frenchEmailTranslation;
-    translatedText =
-      translationObject["Please verify your emaill address"] || text;
-  }
-
-  return translatedText;
-};
-
 const generateEmailVerifyLink = (payload: any): string => {
   const { resetPassword } = payload;
   // Logger.log(`config.isDevelopment = ${config.isDevelopment}`);
   let url;
   if (config.isDevelopment) {
-    url = `https://marketplace.dev.myautochek.com/${payload.country.toLowerCase()}`;
+    url = `https://dev.criateur.com`;
   } else if (config.isStaging || config.isTesting) {
-    url = `https://marketplace.staging.myautochek.com/${payload.country.toLowerCase()}`;
+    url = `https://staging.criateur.com`;
   } else {
-    url = `https://autochek.africa/${payload.country.toLowerCase()}`;
+    url = `https://criateur.com`;
   }
 
-  console.log(`node env config.isDeve true or false = ${config.isDevelopment}`);
-  console.log(`url = ${url}`);
-
   console.log(
-    `url = ${url}/email/verify?auth_token=${payload.token}${
+    `url = ${url}/email/verify?auth_token=${payload.registrationToken}${
       resetPassword ? "&resetPassword=true" : ""
     }`
   );
 
-  return `${url}/email/verify?auth_token=${payload.token}${
+  return `${url}/email/verify?auth_token=${payload.registrationToken}${
     resetPassword ? "&resetPassword=true" : ""
   }`;
 };
 
 export const sendUserSignUpVerifyEmail = (payload: any) => {
-  const templatePath = getTemplateFile(payload.country, "user_signup_verify");
+  const templatePath = getTemplateFile("user_signup_verify");
   const templateString = fs.readFileSync(
     path.join(__dirname, templatePath),
     "utf-8"
   );
 
-  payload.firstname = toTitleCase(payload.firstname);
+  payload.firstName = toTitleCase(payload.fullName.split(" ")[0]);
   payload.link = generateEmailVerifyLink(payload);
 
   const rendered = Mustache.render(templateString, { user: payload });
   const emailData = {
     recipients: [payload.email],
-    subject: handleTranslation(
-      payload.country,
-      "Please verify your email address"
-    ),
+    subject: "Please verify your email address",
     html: rendered
   };
-  sendEmail(emailData);
-};
-
-export const sendFranchiseCreationEmail = (payload: any, country = "NG") => {
-  const templatePath = getTemplateFile(country, "franchise_signup");
-
-  const templateString = fs.readFileSync(
-    path.join(__dirname, templatePath),
-    "utf-8"
-  );
-
-  payload.name = toTitleCase(payload.name);
-
-  const rendered = Mustache.render(templateString, { franchise: payload });
-  const emailData = {
-    recipients: [payload.email],
-    subject: handleTranslation(payload.country, "Welcome to Autochek"),
-    html: rendered
-  };
+  //console.log(emailData);
   sendEmail(emailData);
 };
 

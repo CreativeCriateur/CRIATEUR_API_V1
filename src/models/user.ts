@@ -4,21 +4,20 @@ import { Model, DataTypes, Sequelize } from "sequelize";
 interface userAttributes {
   id: number;
   uuid: string;
+  fullName: string;
   email: string;
   password: string;
   confirmPassword: string;
-  isActive: boolean;
-  isNewUser: boolean;
-  isDeleted: boolean;
-  deletedAt: Date;
-  deleteReason: string;
-  appleId: string;
-  googleId: string;
-  facebookId: string;
+  imageUrl: string;
   otp: string;
   otpExpiry: Date;
-  imageUrl: string;
   registrationToken: string;
+  isActive: boolean;
+  isNewUser: boolean;
+  googleId: string;
+  isDeleted: boolean;
+  deleteReason: string;
+  deletedAt: Date;
 }
 
 export class User extends Model<userAttributes> implements userAttributes {
@@ -30,38 +29,37 @@ export class User extends Model<userAttributes> implements userAttributes {
 
   id!: number;
   uuid!: string;
+  fullName!: string;
   email!: string;
   password!: string;
   confirmPassword!: string;
+  imageUrl!: string;
   isActive!: boolean;
   isNewUser!: boolean;
-  isDeleted!: boolean;
-  deletedAt!: Date;
-  deleteReason!: string;
-  appleId!: string;
   googleId!: string;
-  facebookId!: string;
+  isDeleted!: boolean;
+  deleteReason!: string;
+  deletedAt!: Date;
   otp!: string;
   otpExpiry!: Date;
-  imageUrl!: string;
   registrationToken!: string;
 
   static associate(models: any) {
     // define association here
-    this.hasMany(models.Post, { foreignKey: "userId", as: "posts" });
-    this.hasMany(models.Booking, { foreignKey: "userId", as: "booking" });
-    this.hasMany(models.AccountInfo, {
-      foreignKey: "userId",
-      as: "accountInfo"
+    //this.hasMany(models.Post, { foreignKey: "userUuid", as: "post" });
+    //this.hasMany(models.Booking, { foreignKey: "userUuid", as: "booking" });
+    this.hasOne(models.AccountInfo, {
+      foreignKey: "userUuid", // Specifies that AccountInfos references User via uuid
+      sourceKey: "uuid" // Indicates the key in the User model
     });
-    this.belongsToMany(models.Project, {
-      through: "ProjectAssignments"
-    });
+    // this.belongsToMany(models.Project, {
+    //   through: "ProjectAssignments"
+    // });
   }
 
-  toJSON() {
-    return { ...this.get(), id: undefined, userId: undefined };
-  }
+  // toJSON() {
+  //   return { ...this.get(), id: undefined, userUuid: undefined };
+  // }
 
   static initModel(sequelize: Sequelize) {
     this.init(
@@ -73,9 +71,12 @@ export class User extends Model<userAttributes> implements userAttributes {
           allowNull: false
         },
         uuid: {
-          type: DataTypes.UUID,
-          defaultValue: DataTypes.UUIDV4,
-          allowNull: false
+          type: DataTypes.STRING,
+          allowNull: false,
+          unique: true
+        },
+        fullName: {
+          type: DataTypes.STRING
         },
         email: {
           type: DataTypes.STRING,
@@ -90,6 +91,28 @@ export class User extends Model<userAttributes> implements userAttributes {
           type: DataTypes.STRING,
           allowNull: false
         },
+        imageUrl: {
+          type: DataTypes.STRING
+        },
+        isActive: {
+          type: DataTypes.BOOLEAN
+        },
+        isNewUser: {
+          type: DataTypes.BOOLEAN
+        },
+        googleId: {
+          type: DataTypes.STRING
+        },
+        otp: {
+          type: DataTypes.STRING
+        },
+        otpExpiry: {
+          type: DataTypes.DATE
+        },
+        registrationToken: {
+          type: DataTypes.STRING,
+          unique: true
+        },
         isDeleted: {
           type: DataTypes.BOOLEAN,
           defaultValue: false
@@ -99,34 +122,6 @@ export class User extends Model<userAttributes> implements userAttributes {
         },
         deleteReason: {
           type: DataTypes.STRING
-        },
-        isActive: {
-          type: DataTypes.BOOLEAN
-        },
-        isNewUser: {
-          type: DataTypes.BOOLEAN
-        },
-        appleId: {
-          type: DataTypes.STRING
-        },
-        googleId: {
-          type: DataTypes.STRING
-        },
-        facebookId: {
-          type: DataTypes.STRING
-        },
-        otp: {
-          type: DataTypes.STRING
-        },
-        otpExpiry: {
-          type: DataTypes.DATE
-        },
-        imageUrl: {
-          type: DataTypes.STRING
-        },
-        registrationToken: {
-          type: DataTypes.STRING,
-          unique: true
         }
       },
       {

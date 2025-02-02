@@ -6,7 +6,7 @@ const redis = new Redis();
 // Publisher: Function that publishes the message to a channel
 export const publishMessage = async (channel: string, message: string) => {
   await redis.publish(channel, message);
-  console.log(`Message published to ${channel}: ${message}`);
+  console.log(`Message published to ${channel}`);
 };
 
 // Subscriber: Listen for new messages on a specific channel

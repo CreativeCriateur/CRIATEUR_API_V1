@@ -46,8 +46,7 @@ export class WaitList
           allowNull: false
         },
         uuid: {
-          type: DataTypes.UUID,
-          defaultValue: DataTypes.UUIDV4
+          type: DataTypes.STRING
         },
         fullName: {
           type: DataTypes.STRING,
@@ -67,16 +66,16 @@ export class WaitList
           type: DataTypes.BOOLEAN,
           defaultValue: false
         },
-        deletedAt: {
-          type: DataTypes.DATE
-        },
         deleteReason: {
           type: DataTypes.STRING
+        },
+        deletedAt: {
+          type: DataTypes.DATE
         }
       },
       {
         sequelize,
-        tableName: "waitLists",
+        tableName: "waitlists",
         modelName: "WaitList"
       }
     );

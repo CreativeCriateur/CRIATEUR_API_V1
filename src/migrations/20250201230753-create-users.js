@@ -1,8 +1,9 @@
 "use strict";
+
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, DataTypes) {
-    await queryInterface.createTable("AccountInfos", {
+    await queryInterface.createTable("users", {
       id: {
         allowNull: false,
         autoIncrement: true,
@@ -10,52 +11,55 @@ module.exports = {
         type: DataTypes.INTEGER
       },
       uuid: {
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4
+        type: DataTypes.STRING,
+        unique: true,
+        index: true
       },
-      userId: {
-        type: DataTypes.INTEGER,
-        allowNull: false
+      fullName: {
+        type: DataTypes.STRING
       },
       email: {
-        type: DataTypes.STRING
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: true
       },
       password: {
-        type: DataTypes.STRING
+        type: DataTypes.STRING,
+        allowNull: false
       },
       confirmPassword: {
         type: DataTypes.STRING
       },
-      username: {
+      imageUrl: {
         type: DataTypes.STRING
       },
-      phoneNumber: {
+      isActive: {
+        type: DataTypes.BOOLEAN
+      },
+      isNewUser: {
+        type: DataTypes.BOOLEAN
+      },
+      googleId: {
         type: DataTypes.STRING
       },
-      username: {
+      otp: {
         type: DataTypes.STRING
       },
-      organization: {
-        type: DataTypes.STRING
+      otpExpiry: {
+        type: DataTypes.DATE
       },
-      position: {
-        type: DataTypes.STRING
-      },
-      address: {
-        type: DataTypes.STRING
+      registrationToken: {
+        type: DataTypes.STRING,
+        unique: true
       },
       isDeleted: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: false
-      },
-      deletedAt: {
-        type: DataTypes.DATE
+        type: DataTypes.BOOLEAN
       },
       deleteReason: {
         type: DataTypes.STRING
       },
-      imageUrl: {
-        type: DataTypes.STRING
+      deletedAt: {
+        type: DataTypes.DATE
       },
       createdAt: {
         allowNull: false,
@@ -67,7 +71,8 @@ module.exports = {
       }
     });
   },
+
   async down(queryInterface, DataTypes) {
-    await queryInterface.dropTable("AccountInfos");
+    await queryInterface.dropTable("users");
   }
 };

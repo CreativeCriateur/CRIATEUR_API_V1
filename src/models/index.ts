@@ -6,11 +6,12 @@ import Payment from "./payment";
 import Post from "./post";
 import Project from "./project";
 import Service from "./service";
-import Test from "./test";
 import AccountInfo from "./accountinfo";
 import WaitList from "./waitlist";
 import User from "./user";
 import Resource from "./resource";
+import Role from "./role";
+import Permission from "./permission";
 const env = process.env.NODE_ENV || "development";
 const config = require(__dirname + "/../config/config.js")[env];
 
@@ -32,27 +33,32 @@ if (config.use_env_variable) {
 const db: any = {
   sequelize,
   AccountInfo,
-  Booking,
-  Payment,
-  Post,
-  Project,
-  Service,
-  Test,
   User,
   WaitList,
-  Resource
+  Resource,
+  Permission,
+  Role
+  // Booking,
+  // Payment,
+  // Post,
+  // Project,
+  // Service,
+  //
+  // ,
+  //
 };
 
 AccountInfo.initModel(sequelize);
-Booking.initModel(sequelize);
-Payment.initModel(sequelize);
-Post.initModel(sequelize);
-Project.initModel(sequelize);
-Service.initModel(sequelize);
-Test.initModel(sequelize);
 User.initModel(sequelize);
 WaitList.initModel(sequelize);
+// Booking.initModel(sequelize);
+// Payment.initModel(sequelize);
+// Post.initModel(sequelize);
+// Project.initModel(sequelize);
+// Service.initModel(sequelize);
 Resource.initModel(sequelize);
+Role.initModel(sequelize);
+Permission.initModel(sequelize);
 
 Object.values(db).forEach((modelName: any) => {
   if (modelName.associate) {

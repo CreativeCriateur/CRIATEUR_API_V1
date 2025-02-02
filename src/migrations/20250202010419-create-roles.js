@@ -1,28 +1,21 @@
 "use strict";
+
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, DataTypes) {
-    await queryInterface.createTable("services", {
+    await queryInterface.createTable("roles", {
       id: {
-        type: DataTypes.INTEGER,
+        allowNull: false,
         autoIncrement: true,
         primaryKey: true,
-        allowNull: false
-      },
-      uuid: {
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4
+        type: DataTypes.INTEGER
       },
       name: {
-        type: DataTypes.STRING,
-        allowNull: false
+        type: DataTypes.STRING
       },
-      description: {
-        type: DataTypes.TEXT
-      },
-      price: {
-        type: DataTypes.DECIMAL(10, 2),
-        allowNull: false
+      permissions: {
+        type: DataTypes.ARRAY(DataTypes.STRING),
+        allowNull: true
       },
       createdAt: {
         allowNull: false,
@@ -34,7 +27,8 @@ module.exports = {
       }
     });
   },
+
   async down(queryInterface, DataTypes) {
-    await queryInterface.dropTable("services");
+    await queryInterface.dropTable("roles");
   }
 };
