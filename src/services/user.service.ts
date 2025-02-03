@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 import db from "../models";
 import { isValidPassword, isValidEmail, checkPassword } from "../utils/helpers";
 import { Authentication } from "../utils/auth";
+import { generateOtp } from "../utils/otps";
 
 export const createUser = async (req: Request, res: Response): Promise<any> => {
   const { email, password, confirmPassword } = req.body;
@@ -11,26 +12,26 @@ export const createUser = async (req: Request, res: Response): Promise<any> => {
   let existEmail = null;
 
   if (!email && !password) {
-    return await res.status(400).json({
+    return res.status(400).json({
       message: "Please enter either/both email or password",
       status: false
     });
   }
   if (password !== confirmPassword) {
-    return await res.status(400).json({
+    return res.status(400).json({
       message: "confirmPassword must be equal to Password",
       status: false
     });
   }
   if (email && !isValidEmail(email)) {
-    return await res.status(400).json({
+    return res.status(400).json({
       message: "Invalid email address supplied",
       status: false
     });
   }
   // check password is valid
   if (password && !isValidPassword(password)) {
-    return await res.status(400).json({
+    return res.status(400).json({
       message: "Password must be at least 5 characters with 1 uppercase",
       status: false
     });
@@ -43,7 +44,7 @@ export const createUser = async (req: Request, res: Response): Promise<any> => {
   });
 
   if (existEmail !== null)
-    return await res
+    return res
       .status(400)
       .json({ message: "Email already exist", status: false });
 
@@ -74,14 +75,9 @@ export const createUser = async (req: Request, res: Response): Promise<any> => {
     //insert data into the User.Create
     const dataUser = await db.User.create(userDetails);
 
-    const otp = generateOtp();
-    console.log("otp ", otp);
-    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
-    await dataUser.update({ otp, otpExpiry });
-    //sendOtpToUser(email, otp);
     return dataUser;
   } catch (err: any) {
-    return await res.status(500).json({ message: err.message, status: false });
+    return res.status(500).json({ message: err.message, status: false });
   }
 };
 
@@ -108,6 +104,9 @@ export const list = async (req: Request, res: Response): Promise<any> => {
   // }
 
   const { rows, count } = await db.User.findAndCountAll({
+    where: {
+      isDeleted: false
+    },
     limit: pageSize,
     offset: currentPage
   });
@@ -120,6 +119,68 @@ export const list = async (req: Request, res: Response): Promise<any> => {
       pageSize
     }
   });
+};
+
+export const getAllUsers = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  const users = await db.User.findAll({
+    where: {
+      isDeleted: false
+    }
+  });
+
+  return res.status(200).json({ users });
+};
+
+export const getUserById = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  const { id } = req.params;
+  const user = await db.User.findOne({
+    where: { uuid: id, isDeleted: false }
+  });
+
+  if (!user) {
+    return res
+      .status(400)
+      .json({ messge: "User with id does not exist", status: false });
+  }
+
+  const response = {
+    ...user,
+    passwordExist: user.password ? true : false,
+    status: true
+  };
+
+  return res.status(200).json(response);
+};
+
+export const getUsersByIds = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  const uuids = req.body.uuids as string[];
+  const country = req.body.country as string;
+  //const criteria: any = { id: In(ids), isDelete: false };
+  //if (country) criteria.country = country;
+  try {
+    const users = await db.User.find({
+      where: {
+        uuid: {
+          [Op.in]: uuids
+        }
+      }
+    });
+
+    return res.status(200).json({ users });
+  } catch (err: any) {
+    return await res
+      .status(500)
+      .json({ Error: `Error fetching users...${err.message}`, status: false });
+  }
 };
 
 export const photoUpload = async (
@@ -210,62 +271,6 @@ export const deleteUserAccount = async (
   }
 };
 
-const generateOtp = () => {
-  // crypto.randomInt(100000, 999999).toString();
-  return Math.floor(Math.random() * (999999 - 111111) + 111111).toString();
-};
-
-const sendOtpToUser = (to: string, otp: string) => {};
-
-export const resendOtpToUser = async (
-  req: Request,
-  res: Response
-): Promise<any> => {
-  const { email } = req.body;
-  const data = req.body;
-  let user = null;
-
-  if (email && !isValidEmail(email)) {
-    return await res.status(400).json({
-      message: "Invalid email address supplied",
-      success: false
-    });
-  }
-
-  user = await db.User.findAll({
-    where: {
-      email
-    }
-  });
-
-  if (!user)
-    return await res
-      .status(400)
-      .json({ message: "User not found", status: false });
-
-  if (user.isActive)
-    return await res
-      .status(400)
-      .json({ message: "User already verified", status: false });
-
-  try {
-    const otp = generateOtp();
-    user.otp = otp;
-    user.otpExpiry = new Date(Date.now() * 10 * 60 * 1000);
-    sendOtpToUser(email, otp);
-    await db.User.create(user);
-
-    return await res.status(201).json({
-      message: "OTP resent successfully! Please verify your OTP sent",
-      status: true
-    });
-  } catch (error: any) {
-    return await res
-      .status(500)
-      .json({ message: error.message, status: false });
-  }
-};
-
 export const loginUser = async (req: Request, res: Response): Promise<any> => {
   const { email, password } = req.body;
 
@@ -279,7 +284,7 @@ export const loginUser = async (req: Request, res: Response): Promise<any> => {
     });
 
     if (!user) {
-      return await res
+      return res
         .status(400)
         .json({ message: "User not found. Please sign up", status: false });
     }
@@ -306,11 +311,11 @@ export const loginUser = async (req: Request, res: Response): Promise<any> => {
     if (!flag) {
       throw new Error("Invalid Password");
     }
-    let data: any = Object.assign({}, user);
+    //let data: any = Object.assign({}, user);
+    //console.log("user login", user);
+    //data.passwordExist = true;
 
-    data.passwordExist = true;
-
-    return data;
+    return user;
   } catch (err: any) {
     return await res.status(500).json({ error: err.message, status: false });
   }
@@ -349,7 +354,10 @@ export const loginNoPassword = async (
   return await res.status(200).json(response);
 };
 
-export const verifyOTP = async (req: Request, res: Response): Promise<any> => {
+export const verifyUserOTP = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
   const { email, otp } = req.body;
   const user = await db.User.findOne({
     where: {
@@ -357,38 +365,76 @@ export const verifyOTP = async (req: Request, res: Response): Promise<any> => {
     }
   });
 
-  if (!user) {
-    return await res
-      .status(400)
-      .json({ message: "User not found", status: false });
+  try {
+    if (!user) {
+      return res.status(400).json({ message: "User not found", status: false });
+    }
+
+    if (user.isActive) {
+      return res
+        .status(400)
+        .json({ message: "User already verified", status: false });
+    }
+
+    if (user.otp !== otp || user.otpExpiry < new Date()) {
+      return res
+        .status(400)
+        .json({ message: "Invaid or expired OTP", status: false });
+    }
+
+    user.isActive = true;
+    user.isNewUser = false;
+    user.otp = "";
+    user.otpExpiry = undefined;
+
+    //console.log("user bef", user);
+
+    await user.save();
+    //console.log("use data", user);
+
+    return res.status(201).json({
+      message: "Email verified successfully, you can now login",
+      status: true
+    });
+  } catch (error: any) {
+    return res.status(500).json({ message: error.message, status: false });
   }
+};
 
-  if (user.isActive) {
-    return await res
-      .status(400)
-      .json({ message: "User already verified", status: false });
-  }
-
-  if (user.otp !== otp || user.otpExpiry < new Date()) {
-    return await res
-      .status(400)
-      .json({ message: "Invaid or expired OTP", status: false });
-  }
-
-  user.isActive = true;
-  user.isNewUser = false;
-  user.otp = "";
-  user.otpExpiry = undefined;
-
-  //console.log("user bef", user);
-
-  await user.save();
-  //console.log("use data", user);
-
-  return await res.status(201).json({
-    message: "Email verified successfully, you can now login",
-    status: true
+export const generateNewUserOTP = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  const { email } = req.body;
+  const user = await db.User.findOne({
+    where: {
+      email
+    }
   });
+
+  try {
+    if (!user) {
+      return res.status(400).json({ message: "User not found", status: false });
+    }
+
+    const otp = await generateOtp();
+    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
+
+    user.otp = otp;
+    user.otpExpiry = otpExpiry;
+    await user.save();
+    //console.log("use data", user);
+
+    // send otp to user email
+
+    return res.status(201).json({
+      message: "New Otp generated and send to user's email",
+      otp,
+      status: true
+    });
+  } catch (error: any) {
+    return res.status(500).json({ message: error.message, status: false });
+  }
 };
 
 export const updatePassword = async (req: Request, res: Response) => {
@@ -519,55 +565,6 @@ export const verifyEmail = async (
     .json({ status: true, message: "email is available and valid" });
 };
 
-export const getUserById = async (
-  req: Request,
-  res: Response
-): Promise<any> => {
-  const { id } = req.params;
-  const user = await db.User.findOne({
-    where: { uuid: id, isDeleted: false }
-  });
-
-  if (!user) {
-    return await res
-      .status(400)
-      .json({ messge: "User with id does not exist", status: false });
-  }
-
-  const response = {
-    ...user,
-    passwordExist: user.password ? true : false,
-    status: true
-  };
-
-  return await res.status(200).json(response);
-};
-
-export const getUsersByIds = async (
-  req: Request,
-  res: Response
-): Promise<any> => {
-  const uuids = req.body.uuids as string[];
-  const country = req.body.country as string;
-  //const criteria: any = { id: In(ids), isDelete: false };
-  //if (country) criteria.country = country;
-  try {
-    const users = await db.User.find({
-      where: {
-        uuid: {
-          [Op.in]: uuids
-        }
-      }
-    });
-
-    return res.status(200).json({ users });
-  } catch (err: any) {
-    return await res
-      .status(500)
-      .json({ Error: `Error fetching users...${err.message}`, status: false });
-  }
-};
-
 export const verifyPhone = async (
   req: Request,
   res: Response
@@ -594,40 +591,97 @@ export const verifyPhone = async (
   }
 };
 
+///// Account Profile
+
 export const createAccountInfo = async (
   req: Request,
   res: Response
 ): Promise<any> => {
-  const { userId, phoneNumber, username, organization, position, address } =
+  const { userId, phoneNumber, userName, organization, position, address } =
     req.body;
   const user = await db.User.findOne({
     where: { uuid: userId, isDeleted: false }
   });
+  console.log("user ", user);
 
   if (!user) {
-    return await res
-      .status(400)
-      .json({ message: "User not found", status: false });
+    return res.status(400).json({ message: "User not found", status: false });
   }
 
   try {
-    const accountInfo = {
-      uuid: uuidv4(),
-      userUuId: user.uuid,
-      username,
+    const accountDetails = {
+      userUuid: user.uuid,
+      userName,
       phoneNumber,
       organization,
       position,
       address
     };
-    const accountData = await db.AccountInfo.create(accountInfo);
-
-    return await res.status(201).json({ message: "", status: true });
+    const accountData = await db.AccountInfo.create(accountDetails);
+    console.log("accountData ", accountData);
+    return res
+      .status(201)
+      .json({ message: "Account Profile Added Successfully!", status: true });
   } catch (error: any) {
-    return await res
-      .status(500)
-      .json({ message: error.message, status: false });
+    return res.status(500).json({ message: error.message, status: false });
   }
+};
+
+export const getAllAccountProfile = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    console.log("inside getall profile");
+
+    const profiles = await db.AccountInfo.findAll({
+      where: { isDeleted: false },
+      include: [
+        {
+          model: db.User,
+          as: "user"
+        }
+      ]
+    });
+
+    console.log("profiles ", profiles);
+
+    return res.status(200).json({ profiles, status: true });
+  } catch (error: any) {
+    return res.status(500).json({ message: error.message, status: false });
+  }
+};
+
+export const getAccountProfileList = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  const currentPage = req.body.currentPage || 0;
+  const pageSize = req.body.pageSize || 10;
+  const data = req.body;
+
+  const { rows, count } = await db.AccountInfo.findAndCountAll({
+    where: {
+      isDeleted: false
+    },
+    include: [
+      {
+        model: db.User,
+        as: "user"
+      }
+    ],
+    limit: pageSize,
+    offset: currentPage
+  });
+
+  return res.status(200).json({
+    rows,
+    pagination: {
+      count,
+      currentPage,
+      pageSize
+    }
+  });
 };
 
 export const updateAccountInfo = async (
@@ -647,6 +701,10 @@ export const updateAccountInfo = async (
         }
       ]
     }
+  });
+
+  let accountProfile = await db.AccountInfo.findOne({
+    where: { id: accountInfoId }
   });
 
   if (!user) throw new Error("User id not found");
@@ -676,9 +734,9 @@ export const updateAccountInfo = async (
   try {
     await db.User.create(user);
 
-    return await res.status(200).json({ user });
+    return res.status(200).json({ user });
   } catch (err: any) {
-    return await res
+    return res
       .status(500)
       .json({ Error: "Error updating user " + err.message });
   }

@@ -13,13 +13,13 @@ export const createWaitList = async (
   let existEmail = null;
 
   if (!email) {
-    return await res.status(400).json({
+    return res.status(400).json({
       message: "Please enter email ",
       status: false
     });
   }
   if (email && !isValidEmail(email)) {
-    return await res.status(400).json({
+    return res.status(400).json({
       message: "Invalid email address supplied",
       status: false
     });
@@ -33,7 +33,7 @@ export const createWaitList = async (
   });
 
   if (existEmail !== null)
-    return await res
+    return res
       .status(400)
       .json({ message: "Email already exist", status: false });
 
@@ -50,19 +50,19 @@ export const createWaitList = async (
     //insert data into the WaitList.Create
     const dataWaitList = await db.WaitList.create(waitListDetails);
     //delete userDetails.password;
-    return await res.status(201).json({
+    return res.status(201).json({
       message: "New WaitList added successfully",
       data: dataWaitList,
       status: true
     });
   } catch (err: any) {
-    return await res.status(500).json({ message: err.message, status: false });
+    return res.status(500).json({ message: err.message, status: false });
   }
 };
 
 export const list = async (req: Request, res: Response): Promise<any> => {
-  const currentPage = req.body.currentPage || 0;
-  const pageSize = req.body.pageSize || 10;
+  const currentPage = req.params.currentPage || 0;
+  const pageSize = req.params.pageSize || 10;
 
   const { rows, count } = await db.WaitList.findAndCountAll({
     limit: pageSize,

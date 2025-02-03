@@ -32,5 +32,6 @@ export const config = {
     name: envVars.DBDATABASE,
     logging: envVars.DATABASE_LOGGING
   },
-  secretKey: envVars.SECRET_JWT_KEY
+  accessTokenSecret: envVars.ACCESS_TOKEN_SECRET,
+  refreshTokenSecret: envVars.REFRESH_TOKEN_SECRET
 };

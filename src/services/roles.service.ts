@@ -93,6 +93,32 @@ export const getAllRole = async (req: Request, res: Response): Promise<any> => {
   }
 };
 
+export const getAllListRole = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const currentPage = req.params.currentPage || 0;
+    const pageSize = req.params.pageSize || 10;
+
+    const { rows, count } = await db.Role.findAndCountAll({
+      limit: pageSize,
+      offset: currentPage
+    });
+
+    return res.status(200).json({
+      rows,
+      pagination: {
+        count,
+        currentPage,
+        pageSize
+      }
+    });
+  } catch (error: any) {
+    return res.status(500).json({ message: error.message, status: false });
+  }
+};
+
 export const getRoleById = async (
   req: Request,
   res: Response
@@ -113,24 +139,65 @@ export const getRoleById = async (
   }
 };
 
+// get all roles with permission with no pagination
 export const getAllPermissionToRole = async (
   req: Request,
   res: Response
 ): Promise<any> => {
   try {
-    const { id } = req.params;
-
-    const role = await db.Role.findByPk(id, {
-      include: { model: db.Permission }
+    const roles = await db.Role.findAll({
+      include: [
+        {
+          model: db.Permission,
+          include: [
+            {
+              model: db.Resource
+            }
+          ],
+          through: { attributes: [] }
+        }
+      ]
     });
 
-    if (!role) {
-      return res.status(400).json({ message: "Role not found", status: false });
-    }
+    return res.status(200).json({ roles, status: true });
+  } catch (error: any) {
+    return res.status(500).json({ message: error.message, status: false });
+  }
+};
 
-    return res
-      .status(200)
-      .json({ permissions: role.Permissions, status: true });
+// get all roles with permission with no pagination
+export const getAllPermissionListToRole = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const currentPage = req.params.currentPage || 0;
+    const pageSize = req.params.pageSize || 10;
+
+    const { rows, count } = await db.Role.findAndCountAll({
+      include: [
+        {
+          model: db.Permission,
+          include: [
+            {
+              model: db.Resource
+            }
+          ],
+          through: { attributes: [] }
+        }
+      ],
+      limit: pageSize,
+      offset: currentPage
+    });
+
+    return res.status(200).json({
+      rows,
+      pagination: {
+        count,
+        currentPage,
+        pageSize
+      }
+    });
   } catch (error: any) {
     return res.status(500).json({ message: error.message, status: false });
   }
@@ -144,7 +211,16 @@ export const getRoleByIdWithPermission = async (
   try {
     const role = await db.Role.findOne({
       where: { id },
-      include: { model: db.Permission }
+      include: [
+        {
+          model: db.Permission,
+          include: [
+            {
+              model: db.Resource
+            }
+          ]
+        }
+      ]
     });
     if (!role)
       return res

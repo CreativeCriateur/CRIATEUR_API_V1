@@ -6,13 +6,24 @@ const swaggerOptions = {
     info: {
       title: "API_V1",
       version: "1.0.0",
-      description: "Criateurs_API documentation"
+      description:
+        "Criateurs_API documentation with Bearer token authentication"
     },
     servers: [
       {
         url: `http://localhost:${config.port}` // Adjust according to your base URL
       }
-    ]
+    ],
+    components: {
+      securitySchemes: {
+        BearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT"
+        }
+      }
+    },
+    security: [{ BearerAuth: [] }] // Apply BearerAuth globally
   },
   apis: ["../routes/*.ts", "./dist/routes/*.js"] // Path to the API docs
 };

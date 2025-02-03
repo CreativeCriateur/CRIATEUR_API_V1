@@ -1,13 +1,11 @@
 import { Router } from "express";
 const router = Router();
 import {
-  handleLoginUser,
-  handleRegisterUser,
   handleCreatePermission,
   handleCreateResource,
   handleAddPermissionToRole,
   handleCreateRole,
-  handleGetListResources,
+  handleGetResourcesList,
   handleGetResourceById,
   handleDeleteResource,
   handleGetListPermission,
@@ -22,106 +20,11 @@ import {
   handleGetRoleWithPermissions,
   handleDeletePermissionsToRole,
   handleDeletePermissionToRole,
-  handleUpdatePermissionsToRole
+  handleUpdatePermissionsToRole,
+  handleGetAllRole,
+  handleGetRoleListWithPermissions,
+  handleGetResourceByIdWithPermission
 } from "../controllers/authorization.controller";
-
-/**
- * @swagger
- * /v1/authorization/register:
- *   post:
- *     summary: Sign up as a new User
- *     description: Adds a new user to the system
- *     tags:
- *       - Authorization
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               fullName:
- *                 type: string
- *                 example: Kelvin Joe
- *               email:
- *                 type: string
- *                 example: kelvin20@example.com
- *               password:
- *                 type: string
- *                 example: Mypassword123
- *               confirmPassword:
- *                 type: string
- *                 example: Mypassword123
- *     responses:
- *       201:
- *         description: User created successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 id:
- *                   type: string
- *                   example: 12345
- *                 fullName:
- *                   type: string
- *                   example: john doe
- *                 email:
- *                   type: string
- *                   example: johndoe@example.com
- *       400:
- *         description: Invalid input
- *       500:
- *         description: Server error
- */
-
-router.route("/register").post(handleRegisterUser);
-
-/**
- * @swagger
- * /v1/authorization/login:
- *   post:
- *     summary: Login as a verified User
- *     description: Login as a verified user
- *     tags:
- *       - Authorization
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               email:
- *                 type: string
- *                 example: kelvin20@example.com
- *               password:
- *                 type: string
- *                 example: Mypassword123
- *     responses:
- *       201:
- *         description: Login successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 id:
- *                   type: number
- *                   example: 123
- *                 uuid:
- *                   type: string
- *                   example: 12398u-8177827
- *                 email:
- *                   type: string
- *                   example: johndoe@example.com
- *       400:
- *         description: Invalid input
- *       500:
- *         description: Server error
- */
-
-router.route("/login").post(handleLoginUser);
 
 /**
  * @swagger
@@ -131,6 +34,8 @@ router.route("/login").post(handleLoginUser);
  *     description: Create a Resource for a particular Permission action
  *     tags:
  *       - Authorization
+ *     security:
+ *       - BearerAuth: []  # Secure this route with BearerAuth
  *     requestBody:
  *       required: true
  *       content:
@@ -170,12 +75,49 @@ router.route("/resource/create").post(handleCreateResource);
 
 /**
  * @swagger
- * /v1/authorization/resource/list:
+ * /v1/authorization/resource/{id}/permission:
+ *   get:
+ *     summary: Get a single resource with his permission
+ *     tags:
+ *       - Authorization
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The resource id
+ *     responses:
+ *       200:
+ *         description: Resource details
+ */
+router
+  .route("/resource/:id/permission")
+  .get(handleGetResourceByIdWithPermission);
+
+/**
+ * @swagger
+ * /v1/authorization/resource/list/{currentPage}/size/{pageSize}:
  *   get:
  *     summary: List endpoint for get resource
  *     tags:
  *       - Authorization
+ *     security:
+ *       - BearerAuth: []  # Secure this route with BearerAuth
  *     description: Returns a list of Resource and permission data
+ *     parameters:
+ *       - name: currentPage
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The page id
+ *       - name: pageSize
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The size id
  *     responses:
  *       200:
  *         description: A JSON response
@@ -189,7 +131,9 @@ router.route("/resource/create").post(handleCreateResource);
  *                 pagination:
  *                   type: string
  */
-router.route("/resource/list").get(handleGetListResources);
+router
+  .route("/resource/list/:currentPage/size/:pageSize")
+  .get(handleGetResourcesList);
 
 /**
  * @swagger
@@ -198,6 +142,8 @@ router.route("/resource/list").get(handleGetListResources);
  *     summary: Get a single resource by id which is the primary key
  *     tags:
  *       - Authorization
+ *     security:
+ *       - BearerAuth: []  # Secure this route with BearerAuth
  *     parameters:
  *       - name: id
  *         in: path
@@ -218,6 +164,8 @@ router.route("/resource/:id").get(handleGetResourceById);
  *     summary: Delete resource by id which is the primary key
  *     tags:
  *       - Authorization
+ *     security:
+ *       - BearerAuth: []  # Secure this route with BearerAuth
  *     parameters:
  *       - name: id
  *         in: path
@@ -239,6 +187,8 @@ router.route("/resource/:id").delete(handleDeleteResource);
  *     description: Create a Permission action a Role or a user can perform
  *     tags:
  *       - Authorization
+ *     security:
+ *       - BearerAuth: []  # Secure this route with BearerAuth
  *     requestBody:
  *       required: true
  *       content:
@@ -283,6 +233,8 @@ router.route("/permission/create").post(handleCreatePermission);
  *     summary: List endpoint for get permission
  *     tags:
  *       - Authorization
+ *     security:
+ *       - BearerAuth: []  # Secure this route with BearerAuth
  *     description: Returns a list of Permission
  *     responses:
  *       200:
@@ -306,6 +258,8 @@ router.route("/permission/list").get(handleGetListPermission);
  *     summary: Get a single permission by id which is the primary key
  *     tags:
  *       - Authorization
+ *     security:
+ *       - BearerAuth: []  # Secure this route with BearerAuth
  *     parameters:
  *       - name: id
  *         in: path
@@ -326,6 +280,8 @@ router.route("/permission/:id").get(handleGetPermissionById);
  *     summary: Get all roles assigned to a permission
  *     tags:
  *       - Authorization
+ *     security:
+ *       - BearerAuth: []  # Secure this route with BearerAuth
  *     parameters:
  *       - name: id
  *         in: path
@@ -346,6 +302,8 @@ router.route("/permission/:id/role").get(handleGetPermissionByIdWithRole);
  *     summary: Get all resources assigned to a permission
  *     tags:
  *       - Authorization
+ *     security:
+ *       - BearerAuth: []  # Secure this route with BearerAuth
  *     parameters:
  *       - name: id
  *         in: path
@@ -368,6 +326,8 @@ router
  *     summary: Delete permission by id which is the primary key
  *     tags:
  *       - Authorization
+ *     security:
+ *       - BearerAuth: []  # Secure this route with BearerAuth
  *     parameters:
  *       - name: id
  *         in: path
@@ -520,12 +480,37 @@ router.route("/role/:roleId/add-permissions").post(handleAddPermissionsToRole);
 
 /**
  * @swagger
- * /v1/authorization/role/list:
+ * /v1/authorization/role:
  *   get:
  *     summary: List endpoint for get role
  *     tags:
  *       - Authorization
+ *     security:
+ *       - BearerAuth: []  # Secure this route with BearerAuth
  *     description: Returns a list of roles
+ *     responses:
+ *       200:
+ *         description: A JSON response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 roles:
+ *                   type: string
+ */
+router.route("/role").get(handleGetAllRole);
+
+/**
+ * @swagger
+ * /v1/authorization/role/list:
+ *   get:
+ *     summary: List endpoint for get all roles with pagination
+ *     tags:
+ *       - Authorization
+ *     security:
+ *       - BearerAuth: []  # Secure this route with BearerAuth
+ *     description: Returns a list of roles with pagination
  *     responses:
  *       200:
  *         description: A JSON response
@@ -543,11 +528,52 @@ router.route("/role/list").get(handleGetListRole);
 
 /**
  * @swagger
+ * /v1/authorization/role/permission:
+ *   get:
+ *     summary: Get multiple roles with permission
+ *     tags:
+ *       - Authorization
+ *     security:
+ *       - BearerAuth: []  # Secure this route with BearerAuth
+ *     responses:
+ *       200:
+ *         description: Role details with permissions
+ */
+router.route("/role/permission").get(handleGetRoleWithPermissions);
+
+/**
+ * @swagger
+ * /v1/authorization/role/permission/list:
+ *   get:
+ *     summary: Get multiple roles and permission with pagination
+ *     tags:
+ *       - Authorization
+ *     security:
+ *       - BearerAuth: []  # Secure this route with BearerAuth
+ *     responses:
+ *       200:
+ *         description: A JSON response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 result:
+ *                   type: string
+ *                 pagination:
+ *                   type: string
+ */
+router.route("/role/permission/list").get(handleGetRoleListWithPermissions);
+
+/**
+ * @swagger
  * /v1/authorization/role/{id}:
  *   get:
  *     summary: Get role by id which is the primary key
  *     tags:
  *       - Authorization
+ *     security:
+ *       - BearerAuth: []  # Secure this route with BearerAuth
  *     parameters:
  *       - name: id
  *         in: path
@@ -568,6 +594,8 @@ router.route("/role/:id").get(handleGetRoleById);
  *     summary: Get a single permission by a role id
  *     tags:
  *       - Authorization
+ *     security:
+ *       - BearerAuth: []  # Secure this route with BearerAuth
  *     parameters:
  *       - name: id
  *         in: path
@@ -580,36 +608,6 @@ router.route("/role/:id").get(handleGetRoleById);
  *         description: Role details with a single permission
  */
 router.route("/role/:id/permission").get(handleGetRoleByIdWithPermission);
-
-/**
- * @swagger
- * /v1/authorization/role/{roleId}/permissions:
- *   get:
- *     summary: Get multiple permission by a role id
- *     tags:
- *       - Authorization
- *     parameters:
- *       - name: roleId
- *         in: path
- *         required: true
- *         schema:
- *           type: string
- *         description: The role id
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               permissionIds:
- *                 type: array
- *                 example: [2, 3, 6, 9]
- *     responses:
- *       200:
- *         description: Role details with permissions
- */
-router.route("/role/:roleId/permissions").get(handleGetRoleWithPermissions);
 
 /**
  * @swagger
@@ -676,6 +674,8 @@ router
  *     summary: Remove a multiple permission from a role
  *     tags:
  *       - Authorization
+ *     security:
+ *       - BearerAuth: []  # Secure this route with BearerAuth
  *     parameters:
  *       - name: roleId
  *         in: path
@@ -698,4 +698,5 @@ router
  *         description: Permissions Deleted
  */
 router.route("/role/:roleId/permissions").delete(handleDeletePermissionsToRole);
+
 export default router;

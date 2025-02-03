@@ -3,11 +3,20 @@ import * as fs from "fs";
 import Mustache from "mustache";
 import { config } from "../config";
 import { publishMessage } from "../redis/pubsub";
+import { Request, Response } from "express";
+import { generateOtp } from "../utils/otps";
+import { isValidEmail } from "../utils/helpers";
+import db from "../models";
 
-type EmailPayload = {
+type EmailHtmlPayload = {
   recipients: string[];
   subject: string;
   html: string;
+};
+
+type EmailPayload = {
+  recipients: string;
+  subject: string;
 };
 
 const toTitleCase = (str: any) => {
@@ -24,7 +33,7 @@ export const getTemplateFile = (templateName: string) => {
   return templatePath;
 };
 
-export const sendEmail = async (payload: EmailPayload) => {
+export const sendHtmlEmail = async (payload: EmailHtmlPayload) => {
   // const pubsub = new Pubsub();
   const data = {
     recipients: payload.recipients,
@@ -32,6 +41,15 @@ export const sendEmail = async (payload: EmailPayload) => {
     html: payload.html
   };
   publishMessage("EmailSendEvent", JSON.stringify(data));
+};
+
+export const sendEmail = async (payload: EmailPayload) => {
+  // const pubsub = new Pubsub();
+  const data = {
+    recipients: payload.recipients,
+    subject: payload.subject
+  };
+  // use SendGrid to send email and Redis
 };
 
 const generateEmailVerifyLink = (payload: any): string => {
@@ -57,7 +75,7 @@ const generateEmailVerifyLink = (payload: any): string => {
   }`;
 };
 
-export const sendUserSignUpVerifyEmail = (payload: any) => {
+export const sendUserSignUpFileVerifyEmail = (payload: any) => {
   const templatePath = getTemplateFile("user_signup_verify");
   const templateString = fs.readFileSync(
     path.join(__dirname, templatePath),
@@ -74,10 +92,10 @@ export const sendUserSignUpVerifyEmail = (payload: any) => {
     html: rendered
   };
   //console.log(emailData);
-  sendEmail(emailData);
+  sendHtmlEmail(emailData);
 };
 
-export const sendOtpToUser = (user: any, otp: string) => {
+export const sendOtpFileToUser = async (user: any, otp: string) => {
   const templateString = fs.readFileSync(
     path.join(__dirname, "../../templates/otp.html"),
     "utf-8"
@@ -90,5 +108,65 @@ export const sendOtpToUser = (user: any, otp: string) => {
     subject: "Your Verification token",
     html: rendered
   };
-  sendEmail(emailData);
+  sendHtmlEmail(emailData);
+};
+
+export const sendOtpToUser = async (recipient: string, otp: string) => {
+  otp = otp.split("").join(" ");
+
+  const emailData = {
+    recipients: recipient,
+    subject: "Your Verification OTP",
+    text: `Please verify your email address using this verification code ${otp}`
+  };
+  return sendEmail(emailData);
+};
+
+export const resendOtpFileToUser = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  const { email } = req.body;
+  const data = req.body;
+  let user = null;
+
+  if (email && !isValidEmail(email)) {
+    return await res.status(400).json({
+      message: "Invalid email address supplied",
+      success: false
+    });
+  }
+
+  user = await db.User.findAll({
+    where: {
+      email
+    }
+  });
+
+  if (!user)
+    return await res
+      .status(400)
+      .json({ message: "User not found", status: false });
+
+  if (user.isActive)
+    return await res
+      .status(400)
+      .json({ message: "User already verified", status: false });
+
+  try {
+    const otp = await generateOtp();
+    user.otp = otp;
+    user.otpExpiry = new Date(Date.now() * 10 * 60 * 1000);
+    sendOtpFileToUser(email, otp);
+    await db.User.create(user);
+
+    return await res.status(201).json({
+      message: "OTP resent successfully! Please verify your OTP sent",
+      status: true
+    });
+  } catch (error: any) {
+    return await res
+      .status(500)
+      .json({ message: error.message, status: false });
+  }
 };

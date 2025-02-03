@@ -59,17 +59,28 @@ const router = Router();
  *       500:
  *         description: Server error
  */
-
 router.route("/add").post(handleCreateWaitList);
 
 /**
  * @swagger
- * /v1/waitlists/list:
+ * /v1/waitlists/list/{currentPage}/size/{pageSize}:
  *   get:
- *     summary: List endpoint
+ *     summary: Get a list of waitlist with pagination
  *     tags:
  *       - Waitlists
- *     description: Returns a list of Waitlist data
+ *     parameters:
+ *       - name: currentPage
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The page id
+ *       - name: pageSize
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The size id
  *     responses:
  *       200:
  *         description: A JSON response
@@ -83,6 +94,6 @@ router.route("/add").post(handleCreateWaitList);
  *                 pagination:
  *                   type: string
  */
-router.route("/list").get(handleGetAllWaitList);
+router.route("/list/:currentPage/size/:pageSize").get(handleGetAllWaitList);
 
 export default router;

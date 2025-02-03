@@ -50,7 +50,8 @@ export class User extends Model<userAttributes> implements userAttributes {
     //this.hasMany(models.Booking, { foreignKey: "userUuid", as: "booking" });
     this.hasOne(models.AccountInfo, {
       foreignKey: "userUuid", // Specifies that AccountInfos references User via uuid
-      sourceKey: "uuid" // Indicates the key in the User model
+      sourceKey: "uuid", // Indicates the key in the User model
+      as: "accountInfo"
     });
     // this.belongsToMany(models.Project, {
     //   through: "ProjectAssignments"

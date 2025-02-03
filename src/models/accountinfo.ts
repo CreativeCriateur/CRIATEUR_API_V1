@@ -3,7 +3,6 @@ import { Model, DataTypes, Sequelize } from "sequelize";
 
 interface accountInfoAttributes {
   id: number;
-  uuid: string;
   userUuid: string;
   phoneNumber: string;
   userName: string;
@@ -20,7 +19,6 @@ export class AccountInfo
   implements accountInfoAttributes
 {
   id!: number;
-  uuid!: string;
   userUuid!: string;
   phoneNumber!: string;
   userName!: string;
@@ -42,7 +40,8 @@ export class AccountInfo
     // define association here
     this.belongsTo(models.User, {
       foreignKey: "userUuid", // Specifies the foreign key in AccountInfos pointing to User
-      targetKey: "uuid" // Refers to the uuid column in User
+      targetKey: "uuid", // Refers to the uuid column in User
+      as: "user"
     });
   }
 
@@ -53,10 +52,6 @@ export class AccountInfo
           type: DataTypes.INTEGER,
           autoIncrement: true,
           primaryKey: true,
-          allowNull: false
-        },
-        uuid: {
-          type: DataTypes.STRING,
           allowNull: false
         },
         userUuid: {
@@ -92,7 +87,7 @@ export class AccountInfo
       {
         sequelize,
         tableName: "accountInfos",
-        modelName: "accountInfo"
+        modelName: "AccountInfo"
       }
     );
   }

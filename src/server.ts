@@ -10,7 +10,6 @@ import { routeNotFoundHandler } from "./middlewares/routeNotFoundHandler";
 import routes from "./routes/index";
 import db from "./models";
 import bodyParser from "body-parser";
-import { testSeeds } from "./seeders/test";
 
 const PORT = config.port || 3400;
 
@@ -32,14 +31,6 @@ const swaggerDocs = swaggerJsdoc(swaggerConfig);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 app.use("/v1", routes);
-
-// const createTest = () => {
-//   testSeeds.map((data) => {
-//     db.Test.create(data);
-//   });
-// };
-
-//createTest();
 
 app.use(routeNotFoundHandler);
 
