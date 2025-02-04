@@ -37,12 +37,12 @@ const db: any = {
   WaitList,
   Resource,
   Permission,
-  Role
+  Role,
   // Booking,
   // Payment,
   // Post,
   // Project,
-  // Service,
+  Service
   //
   // ,
   //
@@ -55,7 +55,7 @@ WaitList.initModel(sequelize);
 // Payment.initModel(sequelize);
 // Post.initModel(sequelize);
 // Project.initModel(sequelize);
-// Service.initModel(sequelize);
+Service.initModel(sequelize);
 Resource.initModel(sequelize);
 Role.initModel(sequelize);
 Permission.initModel(sequelize);

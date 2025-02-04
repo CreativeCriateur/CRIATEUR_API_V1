@@ -4,10 +4,12 @@ import { Model, DataTypes, Sequelize } from "sequelize";
 
 interface serviceAttributes {
   id: number;
-  uuid: string;
   name: string;
   description: string;
-  price: number;
+  pricing: string;
+  isDeleted: boolean;
+  deleteReason: string;
+  deletedAt: Date;
 }
 export class Service
   extends Model<serviceAttributes>
@@ -19,10 +21,13 @@ export class Service
    * The `models/index` file will call this method automatically.
    */
   id!: number;
-  uuid!: string;
   name!: string;
   description!: string;
-  price!: number;
+  pricing!: string;
+  isDeleted!: boolean;
+  deleteReason!: string;
+  deletedAt!: Date;
+
   static associate(models: any) {
     // define association here
   }
@@ -36,10 +41,6 @@ export class Service
           primaryKey: true,
           allowNull: false
         },
-        uuid: {
-          type: DataTypes.UUID,
-          defaultValue: DataTypes.UUIDV4
-        },
         name: {
           type: DataTypes.STRING,
           allowNull: false
@@ -47,9 +48,19 @@ export class Service
         description: {
           type: DataTypes.TEXT
         },
-        price: {
-          type: DataTypes.DECIMAL(10, 2),
+        pricing: {
+          type: DataTypes.STRING,
           allowNull: false
+        },
+        isDeleted: {
+          type: DataTypes.BOOLEAN,
+          defaultValue: false
+        },
+        deletedAt: {
+          type: DataTypes.DATE
+        },
+        deleteReason: {
+          type: DataTypes.STRING
         }
       },
       {

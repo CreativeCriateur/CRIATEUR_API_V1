@@ -26,11 +26,7 @@ export const createResource = async (
 
       const dataResult = await db.Resource.create(resourceDetail);
 
-      return res.status(201).json({
-        message: "Resource added successfully!",
-        data: dataResult,
-        status: true
-      });
+      return dataResult;
     }
   } catch (error: any) {
     return res.status(500).json({ message: error.message, status: true });

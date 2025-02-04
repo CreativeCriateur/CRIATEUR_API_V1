@@ -53,6 +53,11 @@ export class User extends Model<userAttributes> implements userAttributes {
       sourceKey: "uuid", // Indicates the key in the User model
       as: "accountInfo"
     });
+    this.belongsToMany(models.Role, {
+      through: "userRoles",
+      foreignKey: "userId",
+      onDelete: "CASCADE"
+    });
     // this.belongsToMany(models.Project, {
     //   through: "ProjectAssignments"
     // });

@@ -42,11 +42,7 @@ export const addPermissionToRole = async (
   try {
     await role.addPermission(permission);
     //await role.save();
-    return res.status(201).json({
-      message: "permission added to role successfully",
-      role,
-      status: true
-    });
+    return role;
   } catch (error: any) {
     console.log(error);
   }
@@ -73,11 +69,7 @@ export const addPermissionsToRole = async (
     await role.addPermissions(permissions);
 
     //await role.save();
-    return res.status(201).json({
-      message: "permissions added to role successfully",
-      role,
-      status: true
-    });
+    return role;
   } catch (error: any) {
     console.log(error);
   }

@@ -1,9 +1,6 @@
 import { Router } from "express";
 const router = Router();
 import {
-  handleCreatePermission,
-  handleCreateResource,
-  handleAddPermissionToRole,
   handleCreateRole,
   handleGetResourcesList,
   handleGetResourceById,
@@ -14,64 +11,14 @@ import {
   handleGetPermissionByIdWithRole,
   handleGetPermissionByIdWithResource,
   handleGetRoleByIdWithPermission,
-  handleAddPermissionsToRole,
   handleGetListRole,
   handleGetRoleById,
   handleGetRoleWithPermissions,
-  handleDeletePermissionsToRole,
-  handleDeletePermissionToRole,
   handleUpdatePermissionsToRole,
   handleGetAllRole,
   handleGetRoleListWithPermissions,
   handleGetResourceByIdWithPermission
 } from "../controllers/authorization.controller";
-
-/**
- * @swagger
- * /v1/authorization/resource/create:
- *   post:
- *     summary: Create Resource for a particular Permission
- *     description: Create a Resource for a particular Permission action
- *     tags:
- *       - Authorization
- *     security:
- *       - BearerAuth: []  # Secure this route with BearerAuth
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *                 example: GetUserData - Resources related to API Endpoints
- *               url:
- *                 type: string
- *                 example: /v1/users/data
- *     responses:
- *       201:
- *         description: Resources added successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 id:
- *                   type: number
- *                   example: 12
- *                 name:
- *                   type: string
- *                   example: GetUserData
- *                 url:
- *                   type: string
- *                   example: /v1/users/data
- *       400:
- *         description: Invalid input
- *       500:
- *         description: Server error
- */
-router.route("/resource/create").post(handleCreateResource);
 
 /**
  * @swagger
@@ -178,53 +125,6 @@ router.route("/resource/:id").get(handleGetResourceById);
  *         description: Resource Deleted
  */
 router.route("/resource/:id").delete(handleDeleteResource);
-
-/**
- * @swagger
- * /v1/authorization/permission/create:
- *   post:
- *     summary: Create Permission a user can perform by it's resource
- *     description: Create a Permission action a Role or a user can perform
- *     tags:
- *       - Authorization
- *     security:
- *       - BearerAuth: []  # Secure this route with BearerAuth
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *                 example: create
- *               resourceId:
- *                 type: string
- *                 example: 12
- *     responses:
- *       201:
- *         description: Permission added successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 id:
- *                   type: number
- *                   example: 123
- *                 name:
- *                   type: string
- *                   example: create
- *                 resourceId:
- *                   type: string
- *                   example: 12
- *       400:
- *         description: Invalid input
- *       500:
- *         description: Server error
- */
-router.route("/permission/create").post(handleCreatePermission);
 
 /**
  * @swagger
@@ -382,101 +282,6 @@ router.route("/permission/:id").delete(handleDeletePermission);
  *         description: Server error
  */
 router.route("/role/create").post(handleCreateRole);
-
-/**
- * @swagger
- * /v1/authorization/role/{roleId}/add-permission/{permissionId}:
- *   post:
- *     summary: Add a single permission to an existing role
- *     description: Add a single permission to role
- *     tags:
- *       - Authorization
- *     parameters:
- *       - name: roleId
- *         in: path
- *         required: true
- *         schema:
- *           type: string
- *         description: The role id
- *     parameters:
- *       - name: permissionId
- *         in: path
- *         required: true
- *         schema:
- *           type: string
- *         description: The permission id
- *     responses:
- *       201:
- *         description: Permission added to role successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 id:
- *                   type: number
- *                   example: 123
- *                 name:
- *                   type: string
- *                   example: Admin
- *                 permission:
- *                   type: string
- *                   example: []
- *       400:
- *         description: Invalid input
- *       500:
- *         description: Server error
- */
-router.route("/role/:id/add-permission").post(handleAddPermissionToRole);
-
-/**
- * @swagger
- * /v1/authorization/role/{roleId}/add-permissions:
- *   post:
- *     summary: Add multiple permissions to an existing role
- *     description: Add multiple permissions to an existing role
- *     tags:
- *       - Authorization
- *     parameters:
- *       - name: roleId
- *         in: path
- *         required: true
- *         schema:
- *           type: string
- *         description: The role id
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               permissionIds:
- *                 type: array
- *                 example: [12, 1, 2]
- *     responses:
- *       201:
- *         description: Permissions added to role successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 id:
- *                   type: number
- *                   example: 123
- *                 name:
- *                   type: string
- *                   example: Admin
- *                 permission:
- *                   type: string
- *                   example: []
- *       400:
- *         description: Invalid input
- *       500:
- *         description: Server error
- */
-router.route("/role/:roleId/add-permissions").post(handleAddPermissionsToRole);
 
 /**
  * @swagger
@@ -638,65 +443,5 @@ router.route("/role/:id/permission").get(handleGetRoleByIdWithPermission);
  *         description: Permission Updated
  */
 router.route("/role/:roleId/permissions").put(handleUpdatePermissionsToRole);
-
-/**
- * @swagger
- * /v1/authorization/role/{roleId}/permission/{permissionId}:
- *   delete:
- *     summary: Remove a single permission from a role
- *     tags:
- *       - Authorization
- *     parameters:
- *       - name: roleId
- *         in: path
- *         required: true
- *         schema:
- *           type: string
- *         description: The role id
- *       - name: permissionId
- *         in: path
- *         required: true
- *         schema:
- *           type: string
- *         description: The permission id
- *     responses:
- *       200:
- *         description: Permission Deleted
- */
-router
-  .route("/role/:roleId/permission/:permissionId")
-  .delete(handleDeletePermissionToRole);
-
-/**
- * @swagger
- * /v1/authorization/role/{roleId}/permissions:
- *   delete:
- *     summary: Remove a multiple permission from a role
- *     tags:
- *       - Authorization
- *     security:
- *       - BearerAuth: []  # Secure this route with BearerAuth
- *     parameters:
- *       - name: roleId
- *         in: path
- *         required: true
- *         schema:
- *           type: string
- *         description: The role id
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               permissionIds:
- *                 type: array
- *                 example: [2, 3, 6, 9]
- *     responses:
- *       200:
- *         description: Permissions Deleted
- */
-router.route("/role/:roleId/permissions").delete(handleDeletePermissionsToRole);
 
 export default router;

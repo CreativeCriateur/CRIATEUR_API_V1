@@ -22,6 +22,11 @@ class Role extends Model<roleAttributes> implements roleAttributes {
       foreignKey: "roleId",
       onDelete: "CASCADE"
     });
+    this.belongsToMany(models.User, {
+      through: "userRoles",
+      foreignKey: "roleId",
+      onDelete: "CASCADE"
+    });
   }
 
   static initModel(sequelize: Sequelize) {

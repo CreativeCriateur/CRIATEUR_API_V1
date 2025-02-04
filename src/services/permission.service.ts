@@ -21,24 +21,24 @@ export const createPermission = async (
   try {
     if (resource !== null) {
       const permissionDetail = {
-        name: name.trim().toUpperCase(),
+        name:
+          name.trim().toUpperCase() + "_" + resource.name.trim().toUpperCase(),
         resourceId
       };
 
       const dataResult = await db.Permission.create(permissionDetail);
-      console.log(dataResult);
       const result = {
         ...dataResult,
-        resource
-      };
-      return res.status(201).json({
-        message: "Permission added successfully!",
-        data: result,
+        resource,
         status: true
-      });
+      };
+      return result;
     }
-  } catch (error) {
-    console.log(error);
+  } catch (error: any) {
+    return res.status(500).json({
+      message: error.message || "Internal server error",
+      status: false
+    });
   }
 };
 

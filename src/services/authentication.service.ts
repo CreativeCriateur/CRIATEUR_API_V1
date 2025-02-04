@@ -39,7 +39,11 @@ export const register = async (req: Request, res: Response): Promise<any> => {
     return res.status(201).json({
       message:
         "New User registered successfully! Please check your email to verify your account",
-      id: user.dataValues.uuid,
+      user: {
+        id: userId,
+        email: user.dataValues.email,
+        otp
+      },
       status: true
     });
   } catch (error: any) {
@@ -57,25 +61,29 @@ export const generateNewOtp = async (
   res: Response
 ): Promise<any> => {
   const result = await generateNewUserOTP(req, res);
+  return result;
 };
 
 export const login = async (req: Request, res: Response) => {
   try {
     const user = await loginUser(req, res);
-
     delete user.dataValues.password;
     delete user.dataValues.confirmPassword;
     const userId = user.dataValues.uuid;
-    const accessToken = await generateAccessToken(userId);
-    const refreshToken = await generateRefreshToken(userId);
+    const roles = user?.dataValues?.Roles?.map((role: any) => role?.name);
+    const accessToken = await generateAccessToken(userId, roles);
+    const refreshToken = await generateRefreshToken(userId, roles);
+    console.log("refreshToken ", refreshToken);
     // save refreshtoken inside the database;
-    // const login =
-    user.registrationToken = refreshToken;
+
+    //user.registrationToken = refreshToken;
     await user.save();
+    console.log("user saved ");
 
     return res.status(200).json({
       message: "Login successfully",
       data: user,
+      roles,
       accessToken,
       refreshToken,
       status: true
@@ -99,7 +107,10 @@ export const generateNewAccessToken = async (
 
   try {
     const decoded: any = await verifyRefreshToken(refreshToken);
-    const newAccessToken = await generateAccessToken(decoded.userId);
+    const newAccessToken = await generateAccessToken(
+      decoded.userId,
+      decoded.roles
+    );
     return res.status(200).json({ accessToken: newAccessToken, status: true });
   } catch (error: any) {
     return res.status(500).json({

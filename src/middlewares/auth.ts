@@ -1,14 +1,17 @@
-import { Request, Response, NextFunction } from "express";
+import { Request, Response, NextFunction, RequestHandler } from "express";
 import { verifyAccessToken } from "../utils/jwt";
 
+interface AuthRequest extends Request {
+  user?: { userId: string; roles: string[] };
+}
+
 export const authenticateToken = async (
-  req: Request,
+  req: AuthRequest,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
   const authHeader = req.headers.authorization;
   const token: any = authHeader && authHeader.split(" ")[1];
-  console.log("token ", token);
 
   try {
     if (!token) {
@@ -19,18 +22,33 @@ export const authenticateToken = async (
 
     let verified = null;
     verified = await verifyAccessToken(token);
-    console.log("verified ", verified);
     if (!verified) {
       res
         .status(403)
         .json({ message: "Invalid or expired token", status: false });
     }
+    req.user = verified;
     next();
   } catch (error: any) {
-    console.error("Error during token verification: ", error);
     res.status(500).json({
       message: error.message || "Internal Server Error",
       status: false
     });
   }
+};
+
+export const authorize = (requiredRoles: string[]): RequestHandler => {
+  return (req: Request, res: Response, next: NextFunction): any => {
+    const authReq = req as AuthRequest;
+    console.log("authReq ", authReq?.user);
+    if (
+      !authReq.user ||
+      !authReq?.user?.roles?.some((role) => requiredRoles.includes(role))
+    ) {
+      return res
+        .status(403)
+        .json({ error: "Forbidden: Insufficient permissions" });
+    }
+    next();
+  };
 };

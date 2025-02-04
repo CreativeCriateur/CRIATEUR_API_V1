@@ -206,7 +206,9 @@ export const updateUser = async (req: Request, res: Response): Promise<any> => {
     }
   });
 
-  if (!user) throw new Error("User id not found");
+  if (!user) {
+    return res.status(400).json({ message: "User not found", status: false });
+  }
 
   if (data.password) {
     if (user.password) {
@@ -250,7 +252,11 @@ export const deleteUserAccount = async (
     const user = await db.User.findOne({
       where: { uuid, isDeleted: false }
     });
-    if (!user) throw new Error("user with the uuid does not exist");
+    if (!user) {
+      return res
+        .status(400)
+        .json({ message: "user with the uuid does not exist", status: false });
+    }
     const updateData = {
       isDeleted: true,
       deletedAt: new Date().toISOString(),
@@ -262,9 +268,9 @@ export const deleteUserAccount = async (
       }
     });
 
-    return await res.status(200).json({ success: true, updatedUserAccount });
+    return res.status(200).json({ success: true, updatedUserAccount });
   } catch (error: any) {
-    return await res.status(500).json({
+    return res.status(500).json({
       Error: `Error deleting user account: ${error.message}`,
       status: false
     });
@@ -280,7 +286,10 @@ export const loginUser = async (req: Request, res: Response): Promise<any> => {
 
   try {
     const user = await db.User.findOne({
-      where: condition
+      where: condition,
+      include: {
+        model: db.Role
+      }
     });
 
     if (!user) {
@@ -471,7 +480,7 @@ export const updatePassword = async (req: Request, res: Response) => {
 
   await db.User.create({ id: user.id, password: newPassword });
 
-  return await res
+  return res
     .status(200)
     .json({ message: "Password Updated Successfully", user, status: true });
 };

@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import {
-  createPermission,
   deletePermission,
   getAllPermissions,
   getPermissionById,
@@ -8,7 +7,6 @@ import {
   getPermissionByIdWithRole
 } from "../services/permission.service";
 import {
-  createResource,
   deleteResource,
   getAllResources,
   getAllResourcesList,
@@ -36,13 +34,6 @@ import { logout } from "../services/authentication.service";
 /// Users
 
 //// Resources
-
-export const handleCreateResource = async (
-  req: Request,
-  res: Response
-): Promise<any> => {
-  return await createResource(req, res);
-};
 
 export const handleGetResources = async (
   req: Request,
@@ -88,13 +79,6 @@ export const handleDeleteResource = async (
 
 //// Permissions
 
-export const handleCreatePermission = async (
-  req: Request,
-  res: Response
-): Promise<any> => {
-  return await createPermission(req, res);
-};
-
 export const handleGetListPermission = async (
   req: Request,
   res: Response
@@ -137,20 +121,6 @@ export const handleCreateRole = async (
   res: Response
 ): Promise<any> => {
   return await addRole(req, res);
-};
-
-export const handleAddPermissionToRole = async (
-  req: Request,
-  res: Response
-): Promise<any> => {
-  return await addPermissionToRole(req, res);
-};
-
-export const handleAddPermissionsToRole = async (
-  req: Request,
-  res: Response
-): Promise<any> => {
-  return await addPermissionsToRole(req, res);
 };
 
 export const handleGetAllRole = async (
@@ -200,20 +170,6 @@ export const handleUpdatePermissionsToRole = async (
   res: Response
 ): Promise<any> => {
   return await updatePermissionsToRole(req, res);
-};
-
-export const handleDeletePermissionToRole = async (
-  req: Request,
-  res: Response
-): Promise<any> => {
-  return await deletePermissionToRole(req, res);
-};
-
-export const handleDeletePermissionsToRole = async (
-  req: Request,
-  res: Response
-): Promise<any> => {
-  return await deletePermissionsToRole(req, res);
 };
 
 //// logout
