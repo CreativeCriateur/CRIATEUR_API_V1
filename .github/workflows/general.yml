@@ -4,3 +4,15 @@ on:
   push:
     branches-ignore:
       - "**"
+
+jobs:
+  example_job:
+    runs-on: ubuntu-latest # The OS where the job will run
+    environment: development
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2 # This step checks out your repository
+
+      - name: Run a simple command
+        run: echo "This is a simple job running successfully!"
