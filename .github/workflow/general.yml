@@ -1,0 +1,6 @@
+name: Build and Deploy to Namecheap Hosting
+
+on:
+  push:
+    branches-ignore:
+      - "**"

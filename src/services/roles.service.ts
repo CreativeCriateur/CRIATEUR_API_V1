@@ -307,8 +307,9 @@ export const deletePermissionsToRole = async (
 };
 
 export const getUserAuthority = async (userId: string): Promise<any> => {
-  // const userRoles = await db.Role.findAll({
-  //   where: {}
-  // });
-  return;
+  const userRoles = await db.User.findAll({
+    where: { id: userId },
+    include: { model: db.Role }
+  });
+  return userRoles;
 };

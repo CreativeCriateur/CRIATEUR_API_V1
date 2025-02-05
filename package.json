@@ -11,6 +11,7 @@
     "start": "ts-node src/server.ts",
     "start:dev1": "nodemon dist/server",
     "start:dev": "concurrently \"redis-server\" \"nodemon dist/server\"",
+    "startDev2": "concurrently \"redis-server\" \"node dist/server\"",
     "start:prod": "node dist/server",
     "test": "jest --config jest.config.ts --coverage"
   },

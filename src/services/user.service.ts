@@ -287,9 +287,17 @@ export const loginUser = async (req: Request, res: Response): Promise<any> => {
   try {
     const user = await db.User.findOne({
       where: condition,
-      include: {
-        model: db.Role
-      }
+      include: [
+        {
+          model: db.Role,
+          include: [
+            {
+              model: db.Permission
+            }
+          ],
+          through: { attributes: [] }
+        }
+      ]
     });
 
     if (!user) {

@@ -254,14 +254,14 @@ router
  *         in: path
  *         required: true
  *         schema:
- *           type: string
+ *           type: number
  *         description: The role id
  *     parameters:
  *       - name: permissionId
  *         in: path
  *         required: true
  *         schema:
- *           type: string
+ *           type: number
  *         description: The permission id
  *     responses:
  *       201:
@@ -286,7 +286,7 @@ router
  *         description: Server error
  */
 router
-  .route("/role/:id/add-permission")
+  .route("/role/:roleId/add-permission/:permissionId")
   .post(authorize(["ADMIN"]), handleAddPermissionToRole);
 
 /**

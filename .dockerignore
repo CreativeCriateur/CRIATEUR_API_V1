@@ -1,0 +1,7 @@
+# exclude unnecessary file from the Docker build
+
+/dist
+/node_modules
+npm-debug.log
+.env
+.git
