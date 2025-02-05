@@ -2,11 +2,11 @@ name: Build and Deploy to Namecheap Hosting
 
 on:
   push:
-    branches-ignore:
-      - "**"
+    branches:
+      - "main"
 
 jobs:
-  example_job:
+  setup:
     runs-on: ubuntu-latest # The OS where the job will run
     environment: development
 
