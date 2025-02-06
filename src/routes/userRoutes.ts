@@ -6,11 +6,22 @@ import {
   handleGetAllUser,
   handleCreateAccountInfo,
   handleGetAccountProfileList,
-  handleGetAccountProfile
+  handleGetAccountProfile,
+  handleUpdatePassword,
+  handleChangePassword,
+  handleUpdateUserById
 } from "../controllers/user.controller";
 import multer from "multer";
+// save this in your server you use diskStorage
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads/");
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.originalname);
+  }
+});
 
-const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 const router = Router();
 
@@ -105,7 +116,125 @@ router.route("/profile").get(handleGetAccountProfile);
  */
 router.route("/:id").get(handleGetUserById);
 
-router.route("/photo/upload").post(handlePhotoUpload, upload.single("image"));
+/**
+ * @swagger
+ * /v1/users/change-password:
+ *   put:
+ *     summary: Replace old password with new password
+ *     tags:
+ *       - Users
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               oldPassword:
+ *                 type: string
+ *                 example: Password12
+ *               newPassword:
+ *                 type: string
+ *                 example: Password2311
+ *               uuid:
+ *                 type: string
+ *                 example: 9019922-kjsjssjki-ooiiaa
+ *     responses:
+ *       200:
+ *         description: Password Changed Successfully
+ */
+router.route("/change-password").put(handleChangePassword);
+
+/**
+ * @swagger
+ * /v1/users/update-password:
+ *   put:
+ *     summary: Replace old password with new password by a user uuid
+ *     tags:
+ *       - Users
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               uuid:
+ *                 type: string
+ *                 example: 009oiiiis-ooi000iiw
+ *               password:
+ *                 type: string
+ *                 example: Password123
+ *     responses:
+ *       200:
+ *         description: Password Updated
+ */
+router.route("/update-password").put(handleUpdatePassword);
+
+/**
+ * @swagger
+ * /v1/users/update/{uuid}:
+ *   put:
+ *     summary: Replace all users by uuid
+ *     tags:
+ *       - Users
+ *     parameters:
+ *       - name: uuid
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The users uuid
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               fullName:
+ *                 type: string
+ *                 example: James Kay
+ *               email:
+ *                 type: string
+ *                 example: example@gmail.com
+ *               password:
+ *                 type: string
+ *                 example: Password09k
+ *     responses:
+ *       200:
+ *         description: Users Updated
+ */
+router.route("/update/:uuid").put(handleUpdateUserById);
+
+/**
+ * @swagger
+ * /v1/users/profile/upload:
+ *   post:
+ *     summary: Upload a file
+ *     tags:
+ *       - Users
+ *     consumes:
+ *       - multipart/form-data
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       201:
+ *         description: File uploaded successfully
+ *       400:
+ *         description: Invalid input
+ *       500:
+ *         description: Server error
+ */
+router.route("/profile/upload").post(upload.single("file"), handlePhotoUpload);
 
 /**
  * @swagger

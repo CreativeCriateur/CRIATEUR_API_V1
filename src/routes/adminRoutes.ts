@@ -13,6 +13,7 @@ import {
   handleDeleteService,
   handleGetUserRole
 } from "../controllers/admin.controller";
+import { handleDeleteUser } from "../controllers/user.controller";
 
 /**
  * @swagger
@@ -413,5 +414,27 @@ router.route("/service/create").post(authorize(["ADMIN"]), handleAddService);
  *         description: Service Deleted
  */
 router.route("/service/:id").delete(authorize(["ADMIN"]), handleDeleteService);
+
+/**
+ * @swagger
+ * /v1/admin/user/{uuid}:
+ *   delete:
+ *     summary: Remove a single user and set is isDeleted to true
+ *     tags:
+ *       - Admin
+ *     security:
+ *       - BearerAuth: []  # Secure this route with BearerAuth
+ *     parameters:
+ *       - name: uuid
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The user uuid
+ *     responses:
+ *       200:
+ *         description: User Deleted
+ */
+router.route("/user/:uuid").delete(authorize(["ADMIN"]), handleDeleteUser);
 
 export default router;

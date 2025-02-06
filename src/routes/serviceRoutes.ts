@@ -71,7 +71,7 @@ router.route("/:id").get(handleGetServiceById);
 
 /**
  * @swagger
- * /v1/service/{id}:
+ * /v1/service/update/{id}:
  *   put:
  *     summary: Replace all service
  *     tags:
@@ -103,6 +103,6 @@ router.route("/:id").get(handleGetServiceById);
  *       200:
  *         description: Service Updated
  */
-router.route("/:id").put(handleUpdateService);
+router.route("/update/:id").put(handleUpdateService);
 
 export default router;

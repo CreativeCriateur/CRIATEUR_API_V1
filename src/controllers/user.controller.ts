@@ -12,7 +12,8 @@ import {
   updateAccountInfo,
   getAccountProfileList,
   getAllAccountProfile,
-  getAllUsers
+  getAllUsers,
+  updatePassword
 } from "../services/user.service";
 
 export const handleGetListUser = async (req: Request, res: Response) => {
@@ -31,20 +32,33 @@ export const handleGetUsersByIds = async (req: Request, res: Response) => {
   return getUsersByIds(req, res);
 };
 
-export const handleUpdateUser = async (req: Request, res: Response) => {
+export const handleLoginNoPassword = async (req: Request, res: Response) => {
+  return loginNoPassword(req, res);
+};
+
+export const handleChangePassword = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  return await changePassword(req, res);
+};
+
+export const handleUpdatePassword = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  return await updatePassword(req, res);
+};
+
+export const handleUpdateUserById = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
   return await updateUser(req, res);
 };
 
 export const handleDeleteUser = async (req: Request, res: Response) => {
   return deleteUserAccount(req, res);
-};
-
-export const handleLoginNoPassword = async (req: Request, res: Response) => {
-  return loginNoPassword(req, res);
-};
-
-export const handleChangePassword = async (req: Request, res: Response) => {
-  return changePassword(req, res);
 };
 
 export const handleGetUserByEmail = async (req: Request, res: Response) => {

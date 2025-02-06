@@ -150,7 +150,7 @@ export const getUserById = async (
   }
 
   const response = {
-    ...user,
+    data: user,
     passwordExist: user.password ? true : false,
     status: true
   };
@@ -187,11 +187,11 @@ export const photoUpload = async (
   req: Request,
   res: Response
 ): Promise<any> => {
-  return;
+  return res.status(201).json(req.file);
 };
 
 export const updateUser = async (req: Request, res: Response): Promise<any> => {
-  const { uuid } = req.body;
+  const { uuid } = req.params;
   const data = req.body;
   let user = await db.User.findOne({
     where: {
@@ -219,27 +219,37 @@ export const updateUser = async (req: Request, res: Response): Promise<any> => {
       if (
         Authentication.comparePassword(data.password, oldhashPassword, oldSalt)
       ) {
-        throw new Error("New password must be different from old password");
+        return res.status(400).json({
+          message: "New password must be different from old password",
+          status: false
+        });
       }
     }
 
     data.password = data.password.trim();
     const salt = Authentication.generateSalt();
     const password = Authentication.generatePasswordHash(data.password, salt);
-    user.password = `${salt}.${password}`;
+    const newPassword = `${salt}.${password}`;
+    user.password = newPassword;
+    user.confirmPassword = newPassword;
     user = await db.User.create(user);
   }
 
   user = Object.assign(user, data);
 
   try {
-    await db.User.save(user);
+    await user.save();
 
-    return await res.status(200).json({ user });
+    delete user.dataValues.password;
+    delete user.dataValues.confirmPassword;
+
+    return res
+      .status(200)
+      .json({ message: "User updated successfully", user, status: false });
   } catch (err: any) {
-    return await res
+    return res
       .status(500)
-      .json({ Error: "Error updating user " + err.message });
+      .json({ message: "Error updating user " + err.message, status: false });
   }
 };
 
@@ -268,10 +278,16 @@ export const deleteUserAccount = async (
       }
     });
 
-    return res.status(200).json({ success: true, updatedUserAccount });
+    return res.status(200).json({
+      message: "User deleted successfully",
+      updatedUserAccount,
+      status: true
+    });
   } catch (error: any) {
     return res.status(500).json({
-      Error: `Error deleting user account: ${error.message}`,
+      message:
+        `Error deleting user account: ${error.message}` ||
+        "internal server error",
       status: false
     });
   }
@@ -358,7 +374,7 @@ export const loginNoPassword = async (
 
   const otp = generateOtp();
   user.otp = otp;
-  //user.otpExpiry = new Date();
+  user.otpExpiry = new Date();
   await db.User.create(user);
   //sendOtpToUser(user, otp);
   const response = {
@@ -368,7 +384,7 @@ export const loginNoPassword = async (
     status: false
   };
 
-  return await res.status(200).json(response);
+  return res.status(200).json(response);
 };
 
 export const verifyUserOTP = async (
@@ -460,17 +476,24 @@ export const updatePassword = async (req: Request, res: Response) => {
   const isActive = true;
 
   if (!password && !isValidPassword(password)) {
-    throw new Error("Password must be at least 5 characters with 1 uppercase");
+    return res.status(400).json({
+      message: "Password must be at least 5 characters with 1 uppercase",
+      status: false
+    });
   }
 
   const user = await db.User.findOne({
-    where: Sequelize.literal(
-      `(uuid = '${uuid}') AND (isDeleted = ${isDeleted} AND isActive = ${isActive})`
-    )
+    where: {
+      uuid,
+      isDeleted,
+      isActive
+    }
   });
 
   if (!user) {
-    throw new Error("User not found. Please sign up");
+    return res
+      .status(400)
+      .json({ message: "User not found. Please sign up", status: false });
   }
 
   /* Checking if the new password is different from the old password. */
@@ -478,7 +501,10 @@ export const updatePassword = async (req: Request, res: Response) => {
   const oldhashPassword = user.password.split(".")[1];
 
   if (Authentication.comparePassword(password, oldhashPassword, oldSalt)) {
-    throw new Error("New password must be different from old password");
+    return res.status(400).json({
+      message: "New password must be different from old password",
+      status: false
+    });
   }
 
   password.trim();
@@ -486,7 +512,9 @@ export const updatePassword = async (req: Request, res: Response) => {
   const passwordHash = Authentication.generatePasswordHash(password, salt);
   const newPassword = `${salt}.${passwordHash}`;
 
-  await db.User.create({ id: user.id, password: newPassword });
+  user.password = newPassword;
+  user.confirmPassword = newPassword;
+  await user.save();
 
   return res
     .status(200)
@@ -498,20 +526,25 @@ export const changePassword = async (req: Request, res: Response) => {
   const isDeleted = false;
   const isActive = true;
 
-  if (!newPassword || !checkPassword(newPassword)) {
-    throw new Error(
-      "Password must be minimum five characters, at least one letter, one number and one special character"
-    );
+  if (!newPassword || !isValidPassword(newPassword)) {
+    return res.status(400).json({
+      message: "Password must be at least 5 characters with 1 uppercase",
+      status: false
+    });
   }
 
   const user = await db.User.findOne({
-    where: Sequelize.literal(
-      `(uuid = '${uuid}') AND (isDeleted = ${isDeleted} AND isActive = ${isActive})`
-    )
+    where: {
+      uuid,
+      isDeleted,
+      isActive
+    }
   });
 
   if (!user) {
-    throw new Error("User not found. Please sign up");
+    return res
+      .status(400)
+      .json({ message: "User not found. Please sign up", status: false });
   }
 
   if (user.password) {
@@ -522,12 +555,17 @@ export const changePassword = async (req: Request, res: Response) => {
     if (
       !Authentication.comparePassword(oldPassword, oldhashPassword, oldSalt)
     ) {
-      throw new Error("Incorrect old password");
+      return res
+        .status(400)
+        .json({ message: "Incorrect old password", status: false });
     }
 
     /* Checking if the new password is different from the old password. */
     if (Authentication.comparePassword(newPassword, oldhashPassword, oldSalt)) {
-      throw new Error("New password must be different from old password");
+      return res.status(400).json({
+        message: "New password must be different from old password",
+        status: false
+      });
     }
   }
 
@@ -536,9 +574,13 @@ export const changePassword = async (req: Request, res: Response) => {
   const passwordHash = Authentication.generatePasswordHash(newPassword, salt);
   const password = `${salt}.${passwordHash}`;
 
-  await db.User.create({ id: user.id, password });
+  user.password = password;
+  user.confirmPassword = password;
+  await user.save();
 
-  return user;
+  return res
+    .status(200)
+    .json({ message: "Password Changed Successfully", user, status: true });
 };
 
 export const getUserByAppleId = async (
@@ -580,32 +622,6 @@ export const verifyEmail = async (
   return await res
     .status(200)
     .json({ status: true, message: "email is available and valid" });
-};
-
-export const verifyPhone = async (
-  req: Request,
-  res: Response
-): Promise<any> => {
-  const { primaryPhone, secondaryPhone } = req.body;
-  const user = await db.User.findOne({
-    where: {
-      [Op.and]: [
-        { primaryPhone: primaryPhone, isDeleted: false },
-        { secondaryPhone: secondaryPhone, isDeleted: false }
-      ]
-    }
-  });
-
-  if (user) {
-    return await res.status(400).json({
-      status: false,
-      message: "Phone number already belongs to another user"
-    });
-  } else {
-    return await res
-      .status(200)
-      .json({ status: true, message: "Phone number is available" });
-  }
 };
 
 ///// Account Profile
